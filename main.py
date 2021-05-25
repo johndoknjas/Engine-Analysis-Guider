@@ -11,6 +11,9 @@
 # moves, identifying them based off the third "secondbestmove" and "thirdbestmove". Since
 # you'll be modifying the code, the python stockfish stuff will be added to this project,
 # and can be used that way (instead of having to be used with the pip install currently).
+    # Note that to get the second best move, MultiPV must be at least 2. To get the third best, MultiPV must
+    # be at least 3. Etc.    
+    
     # Not sure if you'll have to do pip uninstall to make sure you use the code you will
     # clone for Python Stockfish (instead of using what pip install provides).
 
