@@ -54,6 +54,11 @@
     
 # If the app can't find a line giving the gaol evaluation, it should give line(s) that is the
 # best it can do. Still may be useful.
+    
+# A good test for the app would be for it to try to find a line giving a goal evaluation in some line
+# that you have trouble with. E.g., the ...Bg4 classical line where Black meets f4 with ...Ned7 instead of ...Bxe2.
+# For that, the user would set the depth parameter to be pretty high, since the goal is to fine some ~0.40 evaluation
+# that holds going quite deeply.
 
 from stockfish import Stockfish
 
