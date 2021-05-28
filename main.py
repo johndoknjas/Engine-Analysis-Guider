@@ -16,6 +16,17 @@
     
     # Not sure if you'll have to do pip uninstall to make sure you use the code you will
     # clone for Python Stockfish (instead of using what pip install provides).
+    
+## IDEAS:
+    
+# The amount of time to let Stockfish think on a normal position in the calculation
+# tree (e.g., depth 28) should differ from the amount of time it thinks when in a final
+# / leaf position (at least when in this position the evaluation is close to the borderline
+# of what is acceptable). When Stockfish is just calculating in a normal position, all it's
+# doing is figuring out whether the evaluation is very big (so to stop there), or to find
+# the likely best moves to continue on with being guided through the search tree. So having
+# a completely accurate evaluation isn't as important as it is in a final/leaf position
+# of the search tree, since that evaluation is used for minimax.
 
 from stockfish import Stockfish
 
