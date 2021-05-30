@@ -1,0 +1,11 @@
+This application guides Stockfish in analyzing a position. The goal is to have
+the application function like a person would, by making moves and allowing Stockfish
+to think on the next position as the root node.
+
+
+
+Licensing notes:
+
+models.py is from a project under the copyright of Ilya Zhelyabuzhsky, 
+and info for this can be found in LICENSE-models. I will be adding and/or
+modifying code in models.py as needed for the application.

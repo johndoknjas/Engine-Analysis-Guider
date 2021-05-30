@@ -59,8 +59,8 @@
 # that you have trouble with. E.g., the ...Bg4 classical line where Black meets f4 with ...Ned7 instead of ...Bxe2.
 # For that, the user would set the depth parameter to be pretty high, since the goal is to fine some ~0.40 evaluation
 # that holds going quite deeply.
-
-from stockfish import Stockfish
+    
+from models import Stockfish
 
 #stockfish = Stockfish(path = r"C:\Users\johnd\Documents\Fun Coding Projects\Stockfish Guider\stockfish-10-win\Windows\stockfish_10_x64.exe",
 #                      depth = 20, parameters = {"MultiPV": 3, "Threads": 4})
