@@ -4,6 +4,10 @@
     :license: MIT, see LICENSE for more details.
 """
 
+# The above note refers to the LICENSE file of the project that models.py
+# is originally from. The contents of that license file can be found in 
+# LICENSE-models.
+
 import subprocess
 from typing import Any, List, Optional
 
