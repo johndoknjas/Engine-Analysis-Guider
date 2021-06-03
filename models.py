@@ -218,11 +218,7 @@ class Stockfish:
                 if current_line[1] == "(none)":
                     # Means it's a mate now.
                     return None
-            elif current_line[5] == "multipv":
-                if current_line[2] != self.depth:
-                    print("current_line[2] value: " + current_line[2])
-                    raise ValueError("current_line[2] != self.depth")
-                assert(current_line[2] == self.depth)
+            elif current_line[5] == "multipv" and current_line[2] == self.depth:
                 multiPV_number = current_line[6]
                 assert(current_line[20] == "pv")
                 if int(multiPV_number) <= num_top_moves:
