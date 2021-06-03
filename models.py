@@ -184,7 +184,7 @@ class Stockfish:
             None
         """
         self._start_new_game()
-        self._put(f"position fen {fen_position}")        
+        self._put(f"position fen {fen_position}")
         
     def get_top_moves(self, num_top_moves: int) -> dict:
         """ Returns the top num_top_moves moves in the current position.
@@ -207,7 +207,8 @@ class Stockfish:
                 break # since the line outputting the bestmove is the last line.
         first_moves_of_PVs = {
             # This is a ditionary. The key is the multiPV number of this line, and
-            # the value is the first move of the line.
+            # the value will be another dictionary containing info for the PV 
+            # (i.e., the first move of the PV, and other info about it).
         }
         # Traversing in reverse order is important since the finalized info
         # is outputted at the end. To see this, in the terminal do "./stockfish", then
@@ -222,11 +223,14 @@ class Stockfish:
                 multiPV_number = current_line[6]
                 assert(current_line[20] == "pv")
                 if int(multiPV_number) <= num_top_moves:
-                    first_moves_of_PVs[multiPV_number] = current_line[21]
+                    first_moves_of_PVs[multiPV_number] = {
+                        "First move": current_line[21], 
+                        "Centipawn": current_line[9],
+                        "Depth": current_line[2],
+                        "Seldepth": current_line[4],
+                    }
             else:
                 return first_moves_of_PVs
-        # CONTINUE HERE - in the returned dictionary, return the centipawn
-        # value of each PV as well.
 
     def get_best_move(self) -> Optional[str]:
         """Returns best move with current position on the board.
