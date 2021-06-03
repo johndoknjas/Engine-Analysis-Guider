@@ -69,9 +69,19 @@ stockfish13 = Stockfish(path = r"C:\Users\johnd\Documents\Fun Coding Projects\St
                         depth = 24, parameters = {"Threads": 4})
 
 stockfish13Mod = Stockfish(path = r"C:\Users\johnd\Documents\Fun Coding Projects\Stockfish Guider\stockfish13OutputModification.exe",
-                           depth = 24, parameters = {"Threads": 4, "MultiPV": 2})
+                           depth = 24, parameters = {"Threads": 4, "MultiPV": 3})
 
 def main():
+    
+    #print (stockfish13Mod.get_top_moves(0))
+    #print (stockfish13Mod.get_top_moves(1))
+    
+    print("Top 2 moves:\n")
+    print (stockfish13Mod.get_top_moves(2))
+    print("\n\nTop 3 moves:\n")
+    print (stockfish13Mod.get_top_moves(3))
+    print ("\n\n")
+    """
     print("Hi")
     stockfish13.set_fen_position("rnbqkbnr/pppp1ppp/8/4p3/4PP2/8/PPPP2PP/RNBQKBNR b KQkq - 0 2")
     stockfish13Mod.set_fen_position("rnbqkbnr/pppp1ppp/8/4p3/4PP2/8/PPPP2PP/RNBQKBNR b KQkq - 0 2")
@@ -81,6 +91,6 @@ def main():
     print("Stockfish 13 Mod:")
     print(stockfish13Mod.get_evaluation())
     print(stockfish13Mod.get_best_move()) # Outputs the second best move, as hoped.
-    
+    """
 if __name__ == '__main__':
     main()

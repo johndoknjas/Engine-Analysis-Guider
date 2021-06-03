@@ -19,7 +19,7 @@ class Stockfish:
     """Integrates the Stockfish chess engine with Python."""
 
     def __init__(
-        self, path: str = "stockfish", depth: int = 2, parameters: dict = None
+        self, path: str = "stockfish", depth: int = 28, parameters: dict = None
     ) -> None:
         self.default_stockfish_params = {
             "Write Debug Log": "false",
@@ -35,7 +35,7 @@ class Stockfish:
             "Slow Mover": 80,
             "UCI_Chess960": "false",
             "UCI_LimitStrength": "false",
-            "UCI_Elo": 1350,
+            "UCI_Elo": 1350, # As long as UCI_LimitStrength is false, this value shouldn't matter.
         }
         self.stockfish = subprocess.Popen(
             path, universal_newlines=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE
@@ -55,7 +55,7 @@ class Stockfish:
         for name, value in list(self._parameters.items()):
             self._set_option(name, value)
 
-        self._start_new_game()
+        self._start_new_game()            
 
     def get_parameters(self) -> dict:
         """Returns current board position.
@@ -184,7 +184,53 @@ class Stockfish:
             None
         """
         self._start_new_game()
-        self._put(f"position fen {fen_position}")
+        self._put(f"position fen {fen_position}")        
+        
+    def get_top_moves(self, num_top_moves: int) -> dict:
+        """ Returns the top num_top_moves moves in the current position.
+        Will return a dictionary of string-string pairs representing the best moves.
+        The key is the PV number (as a string), and the value is the first move.        
+        
+        If there is an error, then an exception will be raised.
+        If it's a mate now, then None is returned.        
+        """
+        
+        if num_top_moves > self.default_stockfish_params["MultiPV"] or num_top_moves <= 0:
+            raise ValueError('bad value for num_top_moves')
+        self._go()
+        lines = []
+        while True:
+            text = self._read_line()
+            splitted_text = text.split(" ")
+            lines.append(splitted_text)
+            if splitted_text[0] == "bestmove":
+                break # since the line outputting the bestmove is the last line.
+        first_moves_of_PVs = {
+            # This is a ditionary. The key is the multiPV number of this line, and
+            # the value is the first move of the line.
+        }
+        # Traversing in reverse order is important since the finalized info
+        # is outputted at the end. To see this, in the terminal do "./stockfish", then
+        # something like "setoption name multiPV value 3", and finally do 
+        # "go depth 24".
+        for current_line in reversed(lines):
+            if current_line[0] == "bestmove":
+                if current_line[1] == "(none)":
+                    # Means it's a mate now.
+                    return None
+            elif current_line[5] == "multipv":
+                if current_line[2] != self.depth:
+                    print("current_line[2] value: " + current_line[2])
+                    raise ValueError("current_line[2] != self.depth")
+                assert(current_line[2] == self.depth)
+                multiPV_number = current_line[6]
+                assert(current_line[20] == "pv")
+                if int(multiPV_number) <= num_top_moves:
+                    first_moves_of_PVs[multiPV_number] = current_line[21]
+            else:
+                return first_moves_of_PVs
+        # CONTINUE HERE - in the returned dictionary, return the centipawn
+        # value of each PV as well.
 
     def get_best_move(self) -> Optional[str]:
         """Returns best move with current position on the board.
