@@ -60,26 +60,29 @@
 # For that, the user would set the depth parameter to be pretty high, since the goal is to fine some ~0.40 evaluation
 # that holds going quite deeply.
     
+    
+    # CONTINUE HERE - Check what you did for stockfish13Mod exe, might explain why the top lines
+              # don't match best move?
+    
+    
 from models import Stockfish
 
 #stockfish = Stockfish(path = r"C:\Users\johnd\Documents\Fun Coding Projects\Stockfish Guider\stockfish-10-win\Windows\stockfish_10_x64.exe",
 #                      depth = 20, parameters = {"MultiPV": 3, "Threads": 4})
 
-stockfish13 = Stockfish(path = r"C:\Users\johnd\Documents\Fun Coding Projects\Stockfish Guider\stockfish13.exe",
-                        depth = 24, parameters = {"Threads": 4})
-
-stockfish13Mod = Stockfish(path = r"C:\Users\johnd\Documents\Fun Coding Projects\Stockfish Guider\stockfish13OutputModification.exe",
-                           depth = 24, parameters = {"Threads": 4, "MultiPV": 3})
+stockfish13 = Stockfish(path = r"C:\Users\johnd\Documents\Fun Coding Projects\Stockfish Guider\stockfish_13_win_x64_bmi2.exe",
+                        depth = 28, parameters = {"Threads": 4, "MultiPV": 3})
 
 class Node:
     
-    def __init__(self, white_to_move, parent_node, PVs):
+    def __init__(self, parent_node, FEN):
         self.children = None
         self.evaluation = None
-        self.white_to_move = white_to_move
+        self.white_to_move = is_whites_turn(FEN)
         self.parent_node = parent_node
-        self.PVs = PVs
-    # PVs will be a dictionary with key-dictionary pairs (see what's returned
+        self.PVs = None
+        self.FEN = FEN
+    # self.PVs will be a dictionary with key-dictionary pairs (see what's returned
     # from get_top_moves in models.py).
     
     def add_child_node(self, child_node):
@@ -89,17 +92,34 @@ class Node:
             (self.black_to_move and child_node.evaluation < self.evaluation)):
               self.evaluation = child_node.evaluation
 
+def is_whites_turn(FEN):
+    for i in range(len(FEN)):
+        if i < len(FEN) - 2 and FEN[i] == ' ' and FEN[i+2] == ' ':
+            if FEN[i+1] == 'w':
+                return True
+            elif FEN[i+1] == 'b':
+                return False
+    raise ValueError("The FEN param for is_whites_turn does not say whose turn it is.")
+    
 def main():
+    FEN = input("Enter the FEN for the position: ")
+    root_node = Node(None, FEN)
+    # CONTINUE HERE - after all the calculations are done, output the data for
+    # the root node. Could also traverse the whole tree and generate notation
+    # that can be copied into chessbase (where the data for each position is
+    # ideally in the form of annotation).
+    print(root_node.white_to_move)
     
-    #print (stockfish13Mod.get_top_moves(0))
-    #print (stockfish13Mod.get_top_moves(1))
     
+    """
     print("Top 2 moves:\n")
     print (stockfish13Mod.get_top_moves(2))
     print("\n\nTop 3 moves:\n")
     print (stockfish13Mod.get_top_moves(3))
     print ("\n\n")
-    """
+    
+    
+    
     print("Hi")
     stockfish13.set_fen_position("rnbqkbnr/pppp1ppp/8/4p3/4PP2/8/PPPP2PP/RNBQKBNR b KQkq - 0 2")
     stockfish13Mod.set_fen_position("rnbqkbnr/pppp1ppp/8/4p3/4PP2/8/PPPP2PP/RNBQKBNR b KQkq - 0 2")
