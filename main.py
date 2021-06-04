@@ -71,6 +71,24 @@ stockfish13 = Stockfish(path = r"C:\Users\johnd\Documents\Fun Coding Projects\St
 stockfish13Mod = Stockfish(path = r"C:\Users\johnd\Documents\Fun Coding Projects\Stockfish Guider\stockfish13OutputModification.exe",
                            depth = 24, parameters = {"Threads": 4, "MultiPV": 3})
 
+class Node:
+    
+    def __init__(self, white_to_move, parent_node, PVs):
+        self.children = None
+        self.evaluation = None
+        self.white_to_move = white_to_move
+        self.parent_node = parent_node
+        self.PVs = PVs
+    # PVs will be a dictionary with key-dictionary pairs (see what's returned
+    # from get_top_moves in models.py).
+    
+    def add_child_node(self, child_node):
+        self.children.append(child_node)
+        if (self.evaluation == None or
+            (self.white_to_move and child_node.evaluation > self.evaluation) or
+            (self.black_to_move and child_node.evaluation < self.evaluation)):
+              self.evaluation = child_node.evaluation
+
 def main():
     
     #print (stockfish13Mod.get_top_moves(0))
