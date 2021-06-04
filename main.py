@@ -61,9 +61,15 @@
 # that holds going quite deeply.
     
     
-    # CONTINUE HERE - Check what you did for stockfish13Mod exe, might explain why the top lines
-              # don't match best move?
-    
+
+
+
+
+# CONTINUE HERE - Now that the official Stockfish 13 release is being used for the exe,
+# there seems to no longer be the problem with the best move not match the first move
+# of the top PV. Test further by outputting the lines in get_top_moves to ensure
+# this is always the case. Also, test if the evaluation equals the evaluation of the
+# top PV (it should). If this is all so, then great.    
     
 from models import Stockfish
 
@@ -80,7 +86,7 @@ class Node:
         if node_depth > search_depth:
             raise ValueError("node_depth > search_depth")
         
-        self.children = None
+        self.children = [] # CONTINUE HERE - consider maybe changing to a dictionary?
         self.evaluation = None
         self.white_to_move = is_whites_turn(FEN)
         self.parent_node = parent_node
@@ -114,6 +120,8 @@ class Node:
             # evaluation (i.e., the eval of the top PV). Another option is getting
             # the direct evaluation of the current position... don't know which is
             # better.
+            # Check if it even makes any difference... shouldn't the evaluation of 
+            # a position be equal to the evaluation of its top PV?
         else:
             current_PV_num = 1
             while (self.PVs.get(str(current_PV_num), None) != None):
@@ -124,7 +132,7 @@ class Node:
                 self.children.append(child_node)
                 if (self.evaluation == None or
                     (self.white_to_move and child_node.evaluation > self.evaluation) or
-                    (self.black_to_move and child_node.evaluation < self.evaluation)):
+                    (not(self.white_to_move) and child_node.evaluation < self.evaluation)):
                         self.evaluation = child_node.evaluation
                 current_PV_num += 1
     
