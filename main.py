@@ -70,27 +70,78 @@ from models import Stockfish
 #stockfish = Stockfish(path = r"C:\Users\johnd\Documents\Fun Coding Projects\Stockfish Guider\stockfish-10-win\Windows\stockfish_10_x64.exe",
 #                      depth = 20, parameters = {"MultiPV": 3, "Threads": 4})
 
-stockfish13 = Stockfish(path = r"C:\Users\johnd\Documents\Fun Coding Projects\Stockfish Guider\stockfish_13_win_x64_bmi2.exe",
-                        depth = 28, parameters = {"Threads": 4, "MultiPV": 3})
+stockfish13 = None
 
 class Node:
     
-    def __init__(self, parent_node, FEN):
+    def __init__(self, parent_node, FEN, search_depth, node_depth):
+        global stockfish13
+        
+        if node_depth > search_depth:
+            raise ValueError("node_depth > search_depth")
+        
         self.children = None
         self.evaluation = None
         self.white_to_move = is_whites_turn(FEN)
         self.parent_node = parent_node
-        self.PVs = None
         self.FEN = FEN
-    # self.PVs will be a dictionary with key-dictionary pairs (see what's returned
-    # from get_top_moves in models.py).
+        self.search_depth = search_depth
+        self.node_depth = node_depth
+        
+        # CONTINUE HERE - use stockfish instnace to get dict of dicts.
+        # Then create each child node and add it to the self.children list,
+        # and then get each of them to search. Or don't.
+        
+        parameters = stockfish13.get_parameters()
+        self.PVs = stockfish13.get_top_moves(int(parameters["MultiPV"]))
+        
+        # self.PVs is a dictionary with key-dictionary pairs (see what's returned
+        # from get_top_moves in models.py).
+        
+        # CONTINUE HERE - also stop the search and declare this node a leaf node
+        # if the evaluation is very big, where it's way past the goal evaluation. 
+        # On the topic of this, you should get the goal evaluation from the user 
+        # and pass it in to the constructor.
+        
+        # CONTINUE HERE - Also account for cases where self.PVs is None, due to
+        # there being no moves in the position. Will have to get the evaluation some
+        # other way.
+        
+        if node_depth == search_depth:
+            # At a leaf node in the tree.
+            self.evaluation = self.PVs["1"]["Centipawn"]
+            # CONTINUE HERE - Think about whether this is the best way to get the
+            # evaluation (i.e., the eval of the top PV). Another option is getting
+            # the direct evaluation of the current position... don't know which is
+            # better.
+        else:
+            current_PV_num = 1
+            while (self.PVs.get(str(current_PV_num), None) != None):
+                new_FEN = make_move(self.FEN, self.PVs.get(str(current_PV_num))["First move"])
+                child_node = Node(self, new_FEN, search_depth, node_depth + 1)
+                # Note that the self arg above will be the parent_node param
+                # for the child_node.
+                self.children.append(child_node)
+                if (self.evaluation == None or
+                    (self.white_to_move and child_node.evaluation > self.evaluation) or
+                    (self.black_to_move and child_node.evaluation < self.evaluation)):
+                        self.evaluation = child_node.evaluation
+                current_PV_num += 1
     
-    def add_child_node(self, child_node):
-        self.children.append(child_node)
-        if (self.evaluation == None or
-            (self.white_to_move and child_node.evaluation > self.evaluation) or
-            (self.black_to_move and child_node.evaluation < self.evaluation)):
-              self.evaluation = child_node.evaluation
+    # CONTINUE HERE - After writing make_move, the above code should be
+    # able to guide stockfish ahead (in theory, but likely some bug to deal with). 
+    # After seeing that it is able to do this, work on the CONTINUE HERE marks 
+    # above for improving some details.
+
+def make_move(old_FEN, move):
+    # CONTINUE HERE - return the FEN that results from making move on old_FEN.
+    # It looks like models.py doesn't have a function to handle this.
+    
+    # Among other things, you will have to flip whose move it is. Also, to be
+    # on the safe side, don't modify old_FEN (not sure whether it is immutable).
+    
+    # PLACEHOLDER:
+    return old_FEN
 
 def is_whites_turn(FEN):
     for i in range(len(FEN)):
@@ -102,8 +153,17 @@ def is_whites_turn(FEN):
     raise ValueError("The FEN param for is_whites_turn does not say whose turn it is.")
     
 def main():
+    global stockfish13
+    
     FEN = input("Enter the FEN for the position: ")
-    root_node = Node(None, FEN)
+    search_depth = int(input("Enter the max depth to search in the tree: "))
+    multiPV_num = int(input("Enter the MultiPV number: "))
+    stockfish_depth = int(input("Enter the search depth for SF: "))
+    
+    stockfish13 = Stockfish(path = r"C:\Users\johnd\Documents\Fun Coding Projects\Stockfish Guider\stockfish_13_win_x64_bmi2.exe",
+                            depth = stockfish_depth, parameters = {"Threads": 4, "MultiPV": multiPV_num})
+    
+    root_node = Node(None, FEN, search_depth, 0)
     # CONTINUE HERE - after all the calculations are done, output the data for
     # the root node. Could also traverse the whole tree and generate notation
     # that can be copied into chessbase (where the data for each position is

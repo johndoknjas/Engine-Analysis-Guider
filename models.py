@@ -221,6 +221,8 @@ class Stockfish:
                     return None
             elif current_line[5] == "multipv" and current_line[2] == self.depth:
                 multiPV_number = current_line[6]
+                if (current_line[20] != "pv"):
+                    print("current_line[20] = " + current_line[20])
                 assert(current_line[20] == "pv")
                 if int(multiPV_number) <= num_top_moves:
                     first_moves_of_PVs[multiPV_number] = {
