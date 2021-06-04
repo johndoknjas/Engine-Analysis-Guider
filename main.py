@@ -137,9 +137,14 @@ class Node:
                 current_PV_num += 1
     
     # CONTINUE HERE - After writing make_move, the above code should be
-    # able to guide stockfish ahead (in theory, but likely some bug to deal with). 
-    # After seeing that it is able to do this, work on the CONTINUE HERE marks 
-    # above for improving some details.
+    # able to guide stockfish ahead. In main, the root node is now
+    # able to print an evaluation it gets after all the guiding.
+    # But in order to ensure that stockfish is being guided properly, and output
+    # of the variations (with the evaluations of the leaf nodes as annotations)
+    # will need to be provided.
+    # After doing some more testing with this, and perhaps writing a function to
+    # do the aforementioned printing of variations, continue by working on the
+    # CONTINUE HERE spots above for improving some details.
 
 def make_move(old_FEN, move):
     # CONTINUE HERE - return the FEN that results from making move on old_FEN.
@@ -177,6 +182,7 @@ def main():
     # that can be copied into chessbase (where the data for each position is
     # ideally in the form of annotation).
     print(root_node.white_to_move)
+    print(root_node.evaluation)
     
     
     """
