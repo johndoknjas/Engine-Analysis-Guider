@@ -134,7 +134,7 @@ class Node:
                 # Note that the self arg above will be the parent_node param
                 # for the child_node.
                 self.children.append(child_node)
-                sorted(self.children, key=cmp_to_key(self.compare_nodes))
+                self.children = sorted(self.children, key=cmp_to_key(self.compare_nodes))
                 if (self.evaluation == None or
                     (self.white_to_move and child_node.evaluation > self.evaluation) or
                     (not(self.white_to_move) and child_node.evaluation < self.evaluation)):
