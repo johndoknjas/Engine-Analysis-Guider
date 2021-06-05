@@ -154,7 +154,7 @@ class Node:
     def compare_nodes(self, first, second):
         if first.evaluation == None or second.evaluation == None:
             raise ValueError("first.evaluation or second.evaluation has no value.")
-        return second.evaluation - first.evaluation
+        return (second.evaluation - first.evaluation) * (1 if self.white_to_move else -1)
 
 def make_move(old_FEN, move):
     # CONTINUE HERE - return the FEN that results from making move on old_FEN.
@@ -168,18 +168,13 @@ def make_move(old_FEN, move):
     # on each new node, as well as update the position with a move.
     
     # PLACEHOLDER:
-    return old_FEN
+    return (old_FEN.replace(' w ', ' b ', 1) if is_whites_turn(old_FEN) else old_FEN.replace(' b ', ' w ', 1))
 
 def output_tree(node):
-    # CONTINUE HERE - Write this function, and when done writing it, use it to test
-    # that the tree stuff is working properly, and that the evaluation of the root node is correctly
-    # based off the evaluations of the appropriate path of nodes.
-    
-    # CONTINUE HERE - The nodes don't seem to be printed out in a consistent order. Fix this
-    
-    # But also, the node that determines the evaluation of the
-    # current node should be displayed first, so explicitly program this behaviour in. Currently
-    # this behaviour only exists for when it's white to move in the current node.
+    # CONTINUE HERE - Nothing to do in this function for now. But after writing the make_move function,
+    # run the program and call this function to check the tree. So far it looks good, with the make_move
+    # simply flipping whose turn it is in the FEN (but not making any actual moves). The root node's
+    # evaluation is based off the top moves for both sides, which is good.
     
     print("node evaluation: " + str(node.evaluation))
     if (node.children != []):
