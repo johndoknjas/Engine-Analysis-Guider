@@ -205,7 +205,7 @@ def output_tree(node):
             else:
                 print("The number you entered is out of bounds, please try again:")
         else:
-            print("You did not enter P or a number, please try again:")
+            print("You did not enter P, Q, or a valid number, please try again:")
 
 def is_whites_turn(FEN):
     for i in range(len(FEN)):
