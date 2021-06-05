@@ -96,10 +96,11 @@ class Node:
         self.node_depth = node_depth
         self.last_move = last_move
         
-        # CONTINUE HERE - use stockfish instnace to get dict of dicts.
+        # CONTINUE HERE - use stockfish instance to get dict of dicts.
         # Then create each child node and add it to the self.children list,
         # and then get each of them to search. Or don't.
         
+        stockfish13.set_fen_position(FEN)
         parameters = stockfish13.get_parameters()
         self.PVs = stockfish13.get_top_moves(int(parameters["MultiPV"]))
         
@@ -173,6 +174,12 @@ def output_tree(node):
     # CONTINUE HERE - Write this function, and when done writing it, use it to test
     # that the tree stuff is working properly, and that the evaluation of the root node is correctly
     # based off the evaluations of the appropriate path of nodes.
+    
+    # CONTINUE HERE - The nodes don't seem to be printed out in a consistent order. Fix this
+    
+    # But also, the node that determines the evaluation of the
+    # current node should be displayed first, so explicitly program this behaviour in. Currently
+    # this behaviour only exists for when it's white to move in the current node.
     
     print("node evaluation: " + str(node.evaluation))
     if (node.children != []):

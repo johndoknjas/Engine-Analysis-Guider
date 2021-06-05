@@ -298,6 +298,10 @@ class Stockfish:
         Returns:
             A dictionary of the current advantage with "type" as "cp" (centipawns) or "mate" (checkmate in)
         """
+        
+        # CONTINUE HERE - Examine this function to see how it gets the evaluation. Figure out if
+        # it's the method you're using to get the evaluation yourself, and if the methods differ
+        # then figure out which is better to do.
 
         evaluation = dict()
         fen_position = self.get_fen_position()
