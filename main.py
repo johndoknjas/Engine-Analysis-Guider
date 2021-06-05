@@ -70,7 +70,8 @@
 # of the top PV. Test further by outputting the lines in get_top_moves to ensure
 # this is always the case. Also, test if the evaluation equals the evaluation of the
 # top PV (it should). If this is all so, then great.    
-    
+
+from functools import cmp_to_key
 from models import Stockfish
 
 #stockfish = Stockfish(path = r"C:\Users\johnd\Documents\Fun Coding Projects\Stockfish Guider\stockfish-10-win\Windows\stockfish_10_x64.exe",
@@ -130,6 +131,7 @@ class Node:
                 # Note that the self arg above will be the parent_node param
                 # for the child_node.
                 self.children.append(child_node)
+                sorted(self.children, key=cmp_to_key(compare_nodes))
                 if (self.evaluation == None or
                     (self.white_to_move and child_node.evaluation > self.evaluation) or
                     (not(self.white_to_move) and child_node.evaluation < self.evaluation)):
@@ -146,6 +148,9 @@ class Node:
     # do the aforementioned printing of variations, continue by working on the
     # CONTINUE HERE spots above for improving some details.
 
+def compare_nodes(first, second):
+        return second.evaluation - first.evaluation
+
 def make_move(old_FEN, move):
     # CONTINUE HERE - return the FEN that results from making move on old_FEN.
     # It looks like models.py doesn't have a function to handle this.
@@ -155,6 +160,10 @@ def make_move(old_FEN, move):
     
     # PLACEHOLDER:
     return old_FEN
+
+def output_tree(node):
+    pass # CONTINUE HERE
+    
 
 def is_whites_turn(FEN):
     for i in range(len(FEN)):

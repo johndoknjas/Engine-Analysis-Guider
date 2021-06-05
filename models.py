@@ -231,9 +231,9 @@ class Stockfish:
                 if int(multiPV_number) <= num_top_moves:
                     first_moves_of_PVs[multiPV_number] = {
                         "First move": current_line[self.get_index(current_line, "pv") + 1], 
-                        "Centipawn": current_line[self.get_index(current_line, "cp") + 1],
-                        "Depth": current_line[self.get_index(current_line, "depth") + 1],
-                        "Seldepth": current_line[self.get_index(current_line, "seldepth") + 1],
+                        "Centipawn": int(current_line[self.get_index(current_line, "cp") + 1]),
+                        "Depth": int(current_line[self.get_index(current_line, "depth") + 1]),
+                        "Seldepth": int(current_line[self.get_index(current_line, "seldepth") + 1])
                     }
             else:
                 return first_moves_of_PVs
