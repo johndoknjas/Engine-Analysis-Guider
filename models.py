@@ -186,6 +186,12 @@ class Stockfish:
         self._start_new_game()
         self._put(f"position fen {fen_position}")
         
+    def get_index(self, lst, string):
+        for i in range(len(lst)):
+            if lst[i] == string:
+                return i
+        return None
+        
     def get_top_moves(self, num_top_moves: int) -> dict:
         """ Returns the top num_top_moves moves in the current position.
         Will return a dictionary of string-string pairs representing the best moves.
@@ -219,15 +225,15 @@ class Stockfish:
                 if current_line[1] == "(none)":
                     # Means it's a mate now.
                     return None
-            elif current_line[5] == "multipv" and current_line[2] == self.depth:
-                multiPV_number = current_line[6]
-                assert(current_line[20] == "pv")
+            elif (self.get_index(current_line, "multipv") != None and 
+                  current_line[2] == self.depth):
+                multiPV_number = current_line[self.get_index(current_line, "multipv") + 1]
                 if int(multiPV_number) <= num_top_moves:
                     first_moves_of_PVs[multiPV_number] = {
-                        "First move": current_line[21], 
-                        "Centipawn": current_line[9],
-                        "Depth": current_line[2],
-                        "Seldepth": current_line[4],
+                        "First move": current_line[self.get_index(current_line, "pv") + 1], 
+                        "Centipawn": int(current_line[self.get_index(current_line, "cp") + 1]),
+                        "Depth": int(current_line[self.get_index(current_line, "depth") + 1]),
+                        "Seldepth": int(current_line[self.get_index(current_line, "seldepth") + 1])
                     }
             else:
                 return first_moves_of_PVs
@@ -292,6 +298,10 @@ class Stockfish:
         Returns:
             A dictionary of the current advantage with "type" as "cp" (centipawns) or "mate" (checkmate in)
         """
+        
+        # CONTINUE HERE - Examine this function to see how it gets the evaluation. Figure out if
+        # it's the method you're using to get the evaluation yourself, and if the methods differ
+        # then figure out which is better to do.
 
         evaluation = dict()
         fen_position = self.get_fen_position()
