@@ -131,7 +131,7 @@ class Node:
                 # Note that the self arg above will be the parent_node param
                 # for the child_node.
                 self.children.append(child_node)
-                sorted(self.children, key=cmp_to_key(compare_nodes))
+                sorted(self.children, key=cmp_to_key(self.compare_nodes))
                 if (self.evaluation == None or
                     (self.white_to_move and child_node.evaluation > self.evaluation) or
                     (not(self.white_to_move) and child_node.evaluation < self.evaluation)):
@@ -147,8 +147,8 @@ class Node:
     # After doing some more testing with this, and perhaps writing a function to
     # do the aforementioned printing of variations, continue by working on the
     # CONTINUE HERE spots above for improving some details.
-
-def compare_nodes(first, second):
+    
+    def compare_nodes(self, first, second):
         return second.evaluation - first.evaluation
 
 def make_move(old_FEN, move):
