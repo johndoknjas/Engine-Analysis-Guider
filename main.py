@@ -81,7 +81,7 @@ stockfish13 = None
 
 class Node:
     
-    def __init__(self, parent_node, FEN, search_depth, node_depth):
+    def __init__(self, parent_node, FEN, search_depth, node_depth, last_move):
         global stockfish13
         
         if node_depth > search_depth:
@@ -94,6 +94,7 @@ class Node:
         self.FEN = FEN
         self.search_depth = search_depth
         self.node_depth = node_depth
+        self.last_move = last_move
         
         # CONTINUE HERE - use stockfish instnace to get dict of dicts.
         # Then create each child node and add it to the self.children list,
@@ -126,8 +127,9 @@ class Node:
         else:
             current_PV_num = 1
             while (self.PVs.get(str(current_PV_num), None) != None):
-                new_FEN = make_move(self.FEN, self.PVs.get(str(current_PV_num))["First move"])
-                child_node = Node(self, new_FEN, search_depth, node_depth + 1)
+                new_move = self.PVs.get(str(current_PV_num))["First move"]
+                new_FEN = make_move(self.FEN, new_move)
+                child_node = Node(self, new_FEN, search_depth, node_depth + 1, new_move)
                 # Note that the self arg above will be the parent_node param
                 # for the child_node.
                 self.children.append(child_node)
@@ -149,6 +151,8 @@ class Node:
     # CONTINUE HERE spots above for improving some details.
     
     def compare_nodes(self, first, second):
+        if first.evaluation == None or second.evaluation == None:
+            raise ValueError("first.evaluation or second.evaluation has no value.")
         return second.evaluation - first.evaluation
 
 def make_move(old_FEN, move):
@@ -158,12 +162,48 @@ def make_move(old_FEN, move):
     # Among other things, you will have to flip whose move it is. Also, to be
     # on the safe side, don't modify old_FEN (not sure whether it is immutable).
     
+    # After completing this function, then you can truly use the output tree
+    # to test if the tree is correct. Since now it will flip whose move it is
+    # on each new node, as well as update the position with a move.
+    
     # PLACEHOLDER:
     return old_FEN
 
 def output_tree(node):
-    pass # CONTINUE HERE
+    # CONTINUE HERE - Write this function, and when done writing it, use it to test
+    # that the tree stuff is working properly, and that the evaluation of the root node is correctly
+    # based off the evaluations of the appropriate path of nodes.
     
+    print("node evaluation: " + str(node.evaluation))
+    if (node.children != []):
+        print("Child nodes:")
+        counter = 1
+        for child_node in node.children:
+            print(str(counter) + ". Node move: " + child_node.last_move + ". Evaluation: " + str(child_node.evaluation))
+            counter += 1
+        print("To inspect a node in the above list, enter its corresponding number:")
+    if (node.parent_node != None):
+        print("Or, enter P to return to the parent node.")
+    print("Or, enter Q to quit.")
+    while True:
+        user_input = input()
+        if user_input == "q" or user_input == "Q":
+            break
+        elif user_input == "p" or user_input == "P":
+            if (node.parent_node != None):
+                output_tree(node.parent_node)
+                break
+            else:
+                print("This node is the root node, please try again:")
+        elif (user_input.isdigit()):
+            user_input_num_form = int(user_input)
+            if user_input_num_form <= len(node.children) and user_input_num_form > 0:
+                output_tree(node.children[user_input_num_form - 1])
+                break
+            else:
+                print("The number you entered is out of bounds, please try again:")
+        else:
+            print("You did not enter P or a number, please try again:")
 
 def is_whites_turn(FEN):
     for i in range(len(FEN)):
@@ -185,7 +225,7 @@ def main():
     stockfish13 = Stockfish(path = r"C:\Users\johnd\Documents\Fun Coding Projects\Stockfish Guider\stockfish_13_win_x64_bmi2.exe",
                             depth = stockfish_depth, parameters = {"Threads": 4, "MultiPV": multiPV_num})
     
-    root_node = Node(None, FEN, search_depth, 0)
+    root_node = Node(None, FEN, search_depth, 0, None)
     # CONTINUE HERE - after all the calculations are done, output the data for
     # the root node. Could also traverse the whole tree and generate notation
     # that can be copied into chessbase (where the data for each position is
@@ -193,6 +233,9 @@ def main():
     print(root_node.white_to_move)
     print(root_node.evaluation)
     
+    user_input = input("To see the search tree, enter tree: ")
+    if user_input == "tree":
+        output_tree(root_node)
     
     """
     print("Top 2 moves:\n")
