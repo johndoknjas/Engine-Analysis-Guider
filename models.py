@@ -187,12 +187,6 @@ class Stockfish:
         self._start_new_game()
         self._put(f"position fen {fen_position}")
         
-    def get_index(self, lst, string):
-        for i in range(len(lst)):
-            if lst[i] == string:
-                return i
-        return None
-        
     def get_top_moves(self, num_top_moves: int) -> dict:
         """ Returns the top num_top_moves moves in the current position.
         Will return a dictionary of string-string pairs representing the best moves.
