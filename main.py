@@ -74,6 +74,9 @@
 from functools import cmp_to_key
 from models import Stockfish
 
+MAX_INTEGER = 1000000000
+MIN_INTEGER = -1 * MAX_INTEGER
+
 #stockfish = Stockfish(path = r"C:\Users\johnd\Documents\Fun Coding Projects\Stockfish Guider\stockfish-10-win\Windows\stockfish_10_x64.exe",
 #                      depth = 20, parameters = {"MultiPV": 3, "Threads": 4})
 
@@ -118,21 +121,24 @@ class Node:
         
         if node_depth == search_depth:
             # At a leaf node in the tree.
-            self.evaluation = self.PVs["1"]["Centipawn"]
-            # CONTINUE HERE - Think about whether this is the best way to get the
-            # evaluation (i.e., the eval of the top PV). Another option is getting
-            # the direct evaluation of the current position... don't know which is
-            # better.
-            # Check if it even makes any difference... shouldn't the evaluation of 
-            # a position be equal to the evaluation of its top PV?
-            
-            # Also, the "Centipawn" key could correspond to a none Value, if there's a mate.
-            # So check whether the "Mate" key has a value, and if so set self.evaluation to some infinity value.
+            if self.PVs["1"]["Centipawn"] != None:
+                self.evaluation = self.PVs["1"]["Centipawn"]
+            elif (self.PVs["1"]["Mate"] > 0 and self.white_to_move) or (self.PVs["1"]["Mate"] < 0 and self.black_to_move):
+                self.evaluation = MAX_INTEGER
+            else:
+                self.evaluation = MIN_INTEGER
+
+        # CONTINUE HERE - Think about whether this is the best way to get the
+        # evaluation (i.e., the eval of the top PV). Another option is getting
+        # the direct evaluation of the current position... don't know which is
+        # better.
+        # Check if it even makes any difference... shouldn't the evaluation of 
+        # a position be equal to the evaluation of its top PV?
             
         else:
             current_PV_num = 1
             while (self.PVs.get(str(current_PV_num), None) != None):
-                new_move = self.PVs.get(str(current_PV_num))["First move"]
+                new_move = self.PVs.get(str(current_PV_num))["Move"]
                 new_FEN = make_move(self.FEN, new_move)
                 child_node = Node(self, new_FEN, search_depth, node_depth + 1, new_move)
                 # Note that the self arg above will be the parent_node param

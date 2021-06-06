@@ -224,18 +224,21 @@ class Stockfish:
         for current_line in reversed(lines):
             if current_line[0] == "bestmove":
                 if current_line[1] == "(none)":
-                    # Means it's a mate now.
+                    # Means the game is over.
                     return None
             elif (self.get_index(current_line, "multipv") != None and 
                   current_line[2] == self.depth):
                 multiPV_number = current_line[self.get_index(current_line, "multipv") + 1]
                 if int(multiPV_number) <= num_top_moves:
-                    # CONTINUE HERE: Update this dictionary to have a "Mate" key. And then
-                    # update both Centipawn and Mate key-value pairs, such that one of them will store
-                    # None if there is no centipawn or mate value.
+                    # CONTINUE HERE - if one exists, use a built-in python function instead of the get_index one you wrote.
+                    has_centipawn_value = (self.get_index(current_line, "cp") != None)
+                    has_mate_value = (self.get_index(current_line, "mate") != None)
+                    if has_centipawn_value == has_mate_value:
+                        raise RuntimeError("There should only be either a centipawn value or a mate value.")
                     first_moves_of_PVs[multiPV_number] = {
-                        "First move": current_line[self.get_index(current_line, "pv") + 1], 
-                        "Centipawn": int(current_line[self.get_index(current_line, "cp") + 1]),
+                        "Move": current_line[self.get_index(current_line, "pv") + 1], 
+                        "Centipawn": int(current_line[self.get_index(current_line, "cp") + 1]) if has_centipawn_value else None,
+                        "Mate": int(current_line[self.get_index(current_line, "mate") + 1]) if has_mate_value else None,
                         "Depth": int(current_line[self.get_index(current_line, "depth") + 1]),
                         "Seldepth": int(current_line[self.get_index(current_line, "seldepth") + 1])
                     }
