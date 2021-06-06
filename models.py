@@ -50,7 +50,7 @@ class Stockfish:
 
         if parameters is None:
             parameters = {}
-        self._parameters = self.default_stockfish_params
+        self._parameters = self.default_stockfish_params # CONTINUE HERE - replace with a deep copy to fix bugs.
         self._parameters.update(parameters)
         for name, value in list(self._parameters.items()):
             self._set_option(name, value)
@@ -69,7 +69,7 @@ class Stockfish:
         Returns:
             None
         """
-        self._parameters = self.default_stockfish_params
+        self._parameters = self.default_stockfish_params # CONTINUE HERE - replace with a deep copy.
         for name, value in list(self._parameters.items()):
             self._set_option(name, value)
 
@@ -201,6 +201,7 @@ class Stockfish:
         If it's a mate now, then None is returned.        
         """
         
+        # CONTINUE HERE - change to self._parameters:
         if num_top_moves > self.default_stockfish_params["MultiPV"] or num_top_moves <= 0:
             raise ValueError('bad value for num_top_moves')
         self._go()
