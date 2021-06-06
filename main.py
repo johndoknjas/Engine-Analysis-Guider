@@ -123,7 +123,7 @@ class Node:
             # At a leaf node in the tree.
             if self.PVs["1"]["Centipawn"] != None:
                 self.evaluation = self.PVs["1"]["Centipawn"]
-            elif (self.PVs["1"]["Mate"] > 0 and self.white_to_move) or (self.PVs["1"]["Mate"] < 0 and self.black_to_move):
+            elif (self.PVs["1"]["Mate"] > 0 and self.white_to_move) or (self.PVs["1"]["Mate"] < 0 and not(self.white_to_move)):
                 self.evaluation = MAX_INTEGER
             else:
                 self.evaluation = MIN_INTEGER

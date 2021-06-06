@@ -226,21 +226,20 @@ class Stockfish:
                 if current_line[1] == "(none)":
                     # Means the game is over.
                     return None
-            elif (self.get_index(current_line, "multipv") != None and 
-                  current_line[2] == self.depth):
-                multiPV_number = current_line[self.get_index(current_line, "multipv") + 1]
+            elif (("multipv" in current_line) and ("depth" in current_line) and 
+                  current_line[current_line.index("depth") + 1] == self.depth):
+                multiPV_number = current_line[current_line.index("multipv") + 1]
                 if int(multiPV_number) <= num_top_moves:
-                    # CONTINUE HERE - if one exists, use a built-in python function instead of the get_index one you wrote.
-                    has_centipawn_value = (self.get_index(current_line, "cp") != None)
-                    has_mate_value = (self.get_index(current_line, "mate") != None)
+                    has_centipawn_value = ("cp" in current_line)
+                    has_mate_value = ("mate" in current_line)
                     if has_centipawn_value == has_mate_value:
-                        raise RuntimeError("There should only be either a centipawn value or a mate value.")
+                        raise RuntimeError("Having a centipawn value and mate value should be mutually exclusive.")
                     first_moves_of_PVs[multiPV_number] = {
-                        "Move": current_line[self.get_index(current_line, "pv") + 1], 
-                        "Centipawn": int(current_line[self.get_index(current_line, "cp") + 1]) if has_centipawn_value else None,
-                        "Mate": int(current_line[self.get_index(current_line, "mate") + 1]) if has_mate_value else None,
-                        "Depth": int(current_line[self.get_index(current_line, "depth") + 1]),
-                        "Seldepth": int(current_line[self.get_index(current_line, "seldepth") + 1])
+                        "Move": current_line[current_line.index("pv") + 1],
+                        "Centipawn": int(current_line[current_line.index("cp") + 1]) if has_centipawn_value else None,
+                        "Mate": int(current_line[current_line.index("mate") + 1]) if has_mate_value else None,
+                        "Depth": int(current_line[current_line.index("depth") + 1]),
+                        "Seldepth": int(current_line[current_line.index("seldepth") + 1])
                     }
             else:
                 return first_moves_of_PVs
