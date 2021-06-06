@@ -106,6 +106,11 @@ class Node:
         stockfish13.set_fen_position(FEN)
         parameters = stockfish13.get_parameters()
         self.PVs = stockfish13.get_top_moves(int(parameters["MultiPV"]))
+        # CONTINUE HERE - An optimization could be to check if this is a leaf node
+        # (i.e., if node_depth == search_depth). If so, only get the first top move
+        # (or instead just call get_evaluation). The reason is that the search
+        # ends here due to this node being a leaf, so you don't need to waste time on multiple PVs.
+        # All you need is the direct evaluation from Stockfish at this point.
         
         # self.PVs is a dictionary with key-dictionary pairs (see what's returned
         # from get_top_moves in models.py).
@@ -119,7 +124,18 @@ class Node:
         # there being no moves in the position. Will have to get the evaluation some
         # other way.
         
-        if node_depth == search_depth:
+        if self.PVs == None:
+            # There are no moves in this position, so set self.evaluation
+            # to the evaluation stockfish directly gives in this position.
+            # It will either be a mate or a stalemate.
+            evaluation_dict = stockfish13.get_evaluation()
+            assert(evaluation_dict["value"] == 0)
+            if evaluation_dict["type"] == "mate":
+                self.evaluation = MIN_INTEGER if self.white_to_move else MAX_INTEGER
+            else:
+                assert(evaluation_dict["type"] == "cp")
+                self.evaluation = 0
+        elif node_depth == search_depth:
             # At a leaf node in the tree.
             if self.PVs["1"]["Centipawn"] != None:
                 self.evaluation = self.PVs["1"]["Centipawn"]
@@ -127,14 +143,6 @@ class Node:
                 self.evaluation = MAX_INTEGER
             else:
                 self.evaluation = MIN_INTEGER
-
-        # CONTINUE HERE - Think about whether this is the best way to get the
-        # evaluation (i.e., the eval of the top PV). Another option is getting
-        # the direct evaluation of the current position... don't know which is
-        # better.
-        # Check if it even makes any difference... shouldn't the evaluation of 
-        # a position be equal to the evaluation of its top PV?
-            
         else:
             current_PV_num = 1
             while (self.PVs.get(str(current_PV_num), None) != None):

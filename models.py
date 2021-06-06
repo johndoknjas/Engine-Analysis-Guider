@@ -204,11 +204,8 @@ class Stockfish:
         
         if num_top_moves > self._parameters["MultiPV"] or num_top_moves <= 0:
             raise ValueError('bad value for num_top_moves')
-        fen_position = self.get_fen_position()
-        self._put(f"position {fen_position}")
         self._go()
         lines = []
-        multiplier = 1 if ("w" in fen_position) else -1
         while True:
             text = self._read_line()
             splitted_text = text.split(" ")
@@ -220,6 +217,7 @@ class Stockfish:
             # the value will be another dictionary containing info for the PV 
             # (i.e., the first move of the PV, and other info about it).
         }
+        multiplier = 1 if ("w" in self.get_fen_position()) else -1
         # Traversing in reverse order is important since the finalized info
         # is outputted at the end. To see this, in the terminal do "./stockfish", then
         # something like "setoption name multiPV value 3", and finally do 
@@ -314,7 +312,7 @@ class Stockfish:
         # then figure out which is better to do.
 
         evaluation = dict()
-        fen_position = self.get_fen_position()
+        fen_position = self.get_fen_position() # this line and the ._put line below should be redundant.
         if "w" in fen_position:  # w can only be in FEN if it is whites move
             compare = 1
         else:  # stockfish shows advantage relative to current player, convention is to do white positive
