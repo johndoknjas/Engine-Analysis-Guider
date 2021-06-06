@@ -163,6 +163,9 @@ def make_move(old_FEN, move):
     # Among other things, you will have to flip whose move it is. Also, to be
     # on the safe side, don't modify old_FEN (not sure whether it is immutable).
     
+    # Idea: create a 2-D vector storing chars representing the pieces (e.g., P and p for white and black pawns).
+    # Also, for the move being made, ensure that it matches the side whose turn it is to move.
+    
     # After completing this function, then you can truly use the output tree
     # to test if the tree is correct. Since now it will flip whose move it is
     # on each new node, as well as update the position with a move.
