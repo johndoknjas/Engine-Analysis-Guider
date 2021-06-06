@@ -230,6 +230,9 @@ class Stockfish:
                   current_line[2] == self.depth):
                 multiPV_number = current_line[self.get_index(current_line, "multipv") + 1]
                 if int(multiPV_number) <= num_top_moves:
+                    # CONTINUE HERE: Update this dictionary to have a "Mate" key. And then
+                    # update both Centipawn and Mate key-value pairs, such that one of them will store
+                    # None if there is no centipawn or mate value.
                     first_moves_of_PVs[multiPV_number] = {
                         "First move": current_line[self.get_index(current_line, "pv") + 1], 
                         "Centipawn": int(current_line[self.get_index(current_line, "cp") + 1]),

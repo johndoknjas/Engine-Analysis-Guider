@@ -125,6 +125,10 @@ class Node:
             # better.
             # Check if it even makes any difference... shouldn't the evaluation of 
             # a position be equal to the evaluation of its top PV?
+            
+            # Also, the "Centipawn" key could correspond to a none Value, if there's a mate.
+            # So check whether the "Mate" key has a value, and if so set self.evaluation to some infinity value.
+            
         else:
             current_PV_num = 1
             while (self.PVs.get(str(current_PV_num), None) != None):
