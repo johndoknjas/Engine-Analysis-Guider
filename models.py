@@ -8,12 +8,13 @@
 # is originally from. The contents of that license file can be found in 
 # LICENSE-models.
 
-import subprocess
-from typing import Any, List, Optional
-
 # This file was obtained from the python stockfish project on github. 
 # I will be adding and/or modifying some code as needed for the application,
 # and the changes I'll make can be found in the commit history.
+
+import subprocess
+from typing import Any, List, Optional
+import copy
 
 class Stockfish:
     """Integrates the Stockfish chess engine with Python."""
@@ -50,7 +51,7 @@ class Stockfish:
 
         if parameters is None:
             parameters = {}
-        self._parameters = self.default_stockfish_params # CONTINUE HERE - replace with a deep copy to fix bugs.
+        self._parameters = copy.deepcopy(self.default_stockfish_params)
         self._parameters.update(parameters)
         for name, value in list(self._parameters.items()):
             self._set_option(name, value)
@@ -69,7 +70,7 @@ class Stockfish:
         Returns:
             None
         """
-        self._parameters = self.default_stockfish_params # CONTINUE HERE - replace with a deep copy.
+        self._parameters = copy.deepcopy(self.default_stockfish_params)
         for name, value in list(self._parameters.items()):
             self._set_option(name, value)
 
@@ -201,8 +202,7 @@ class Stockfish:
         If it's a mate now, then None is returned.        
         """
         
-        # CONTINUE HERE - change to self._parameters:
-        if num_top_moves > self.default_stockfish_params["MultiPV"] or num_top_moves <= 0:
+        if num_top_moves > self._parameters["MultiPV"] or num_top_moves <= 0:
             raise ValueError('bad value for num_top_moves')
         self._go()
         lines = []
