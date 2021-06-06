@@ -246,6 +246,7 @@ class Stockfish:
                     }
             else:
                 return first_moves_of_PVs
+        raise RuntimeError("Reached the end of get_top_moves without returning anything.")
 
     def get_best_move(self) -> Optional[str]:
         """Returns best move with current position on the board.
