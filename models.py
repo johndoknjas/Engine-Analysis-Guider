@@ -204,8 +204,11 @@ class Stockfish:
         
         if num_top_moves > self._parameters["MultiPV"] or num_top_moves <= 0:
             raise ValueError('bad value for num_top_moves')
+        fen_position = self.get_fen_position()
+        self._put(f"position {fen_position}")
         self._go()
         lines = []
+        multiplier = 1 if ("w" in fen_position) else -1
         while True:
             text = self._read_line()
             splitted_text = text.split(" ")
@@ -236,8 +239,8 @@ class Stockfish:
                         raise RuntimeError("Having a centipawn value and mate value should be mutually exclusive.")
                     first_moves_of_PVs[multiPV_number] = {
                         "Move": current_line[current_line.index("pv") + 1],
-                        "Centipawn": int(current_line[current_line.index("cp") + 1]) if has_centipawn_value else None,
-                        "Mate": int(current_line[current_line.index("mate") + 1]) if has_mate_value else None,
+                        "Centipawn": int(current_line[current_line.index("cp") + 1]) * multiplier if has_centipawn_value else None,
+                        "Mate": int(current_line[current_line.index("mate") + 1]) * multiplier if has_mate_value else None,
                         "Depth": int(current_line[current_line.index("depth") + 1]),
                         "Seldepth": int(current_line[current_line.index("seldepth") + 1])
                     }
