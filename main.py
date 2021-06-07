@@ -106,13 +106,14 @@ class Node:
         stockfish13.set_fen_position(FEN)
         parameters = stockfish13.get_parameters()
         self.PVs = stockfish13.get_top_moves(int(parameters["MultiPV"]))
+        self.check_PVs_sorted()
         # CONTINUE HERE - An optimization could be to check if this is a leaf node
         # (i.e., if node_depth == search_depth). If so, only get the first top move
         # (or instead just call get_evaluation). The reason is that the search
         # ends here due to this node being a leaf, so you don't need to waste time on multiple PVs.
         # All you need is the direct evaluation from Stockfish at this point.
         
-        # self.PVs is a dictionary with key-dictionary pairs (see what's returned
+        # self.PVs is a list whose elements are dictionaries (see what's returned
         # from get_top_moves in models.py).
         
         # CONTINUE HERE - also stop the search and declare this node a leaf node
@@ -120,7 +121,7 @@ class Node:
         # On the topic of this, you should get the goal evaluation from the user 
         # and pass it in to the constructor.
         
-        if self.PVs == None:
+        if self.PVs == []:
             # There are no moves in this position, so set self.evaluation
             # to the evaluation stockfish directly gives in this position.
             # It will either be a mate or a stalemate.
@@ -133,16 +134,15 @@ class Node:
                 self.evaluation = 0
         elif node_depth == search_depth:
             # At a leaf node in the tree.
-            if self.PVs[1]["Centipawn"] != None:
-                self.evaluation = self.PVs[1]["Centipawn"]
-            elif (self.PVs[1]["Mate"] > 0):
+            if self.PVs[0]["Centipawn"] != None:
+                self.evaluation = self.PVs[0]["Centipawn"]
+            elif (self.PVs[0]["Mate"] > 0):
                 self.evaluation = MAX_INTEGER
             else:
                 self.evaluation = MIN_INTEGER
         else:
-            current_PV_num = 1
-            while (self.PVs.get(current_PV_num, None) != None):
-                new_move = self.PVs.get(current_PV_num)["Move"]
+            for current_PV in self.PVs:
+                new_move = current_PV["Move"]
                 new_FEN = make_move(self.FEN, new_move)
                 child_node = Node(self, new_FEN, search_depth, node_depth + 1, new_move)
                 # Note that the self arg above will be the parent_node param
@@ -153,7 +153,6 @@ class Node:
                     (self.white_to_move and child_node.evaluation > self.evaluation) or
                     (not(self.white_to_move) and child_node.evaluation < self.evaluation)):
                         self.evaluation = child_node.evaluation
-                current_PV_num += 1
     
     # CONTINUE HERE - After writing make_move, the above code should be
     # able to guide stockfish ahead. In main, the root node is now
@@ -169,6 +168,18 @@ class Node:
         if first.evaluation == None or second.evaluation == None:
             raise ValueError("first.evaluation or second.evaluation has no value.")
         return (second.evaluation - first.evaluation) * (1 if self.white_to_move else -1)
+    
+    def check_PVs_sorted(self):
+        if len(self.PVs) <= 1:
+            return
+        for i in range(1, len(self.PVs)):
+            if self.PVs[i]["Mate"] != None:
+                assert self.PVs[i-1]["Mate"] != None
+            elif self.PVs[i-1]["Mate"] == None:
+                if self.white_to_move:
+                    assert self.PVs[i-1]["Centipawn"] >= self.PVs[i]["Centipawn"]
+                else:
+                    assert self.PVs[i-1]["Centipawn"] <= self.PVs[i]["Centipawn"]
 
 def make_move(old_FEN, move):
     # CONTINUE HERE - return the FEN that results from making move on old_FEN.
