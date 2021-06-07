@@ -188,22 +188,26 @@ class Stockfish:
         self._start_new_game()
         self._put(f"position fen {fen_position}")
         
-    def get_top_moves(self, num_top_moves: int) -> List[dict]:
-        """Returns info on the top moves/PVs in the position.
+    def get_top_moves(self, num_top_moves: int = 5) -> List[dict]:
+        """Returns info on the top moves in the position.
         
         Args:
             num_top_moves:
                 The number of moves to return info on, assuming there are at least
-                those many legal moves. num_top_moves must not exceed the MultiPV parameter.
+                those many legal moves.
         
         Returns:
             A list of dictionaries. In each dictionary, there are keys for Move, Centipawn, and Mate; 
             the corresponding value for either the Centipawn or Mate key will be None.
             If there are no moves in the position, an empty list is returned.
         """
-        
-        if num_top_moves > self._parameters["MultiPV"] or num_top_moves <= 0:
-            raise ValueError("num_top_moves is either greater than MultiPV or not a positive number.")
+
+        if num_top_moves <= 0:
+            raise ValueError("num_top_moves is not a positive number.")
+        old_MultiPV_value = self._parameters["MultiPV"]
+        if num_top_moves != self._parameters["MultiPV"]:
+            self._set_option("MultiPV", num_top_moves)
+            self._parameters.update({"MultiPV": num_top_moves})
         self._go()
         lines = []
         while True:
@@ -217,7 +221,8 @@ class Stockfish:
         for current_line in reversed(lines):
             if current_line[0] == "bestmove":
                 if current_line[1] == "(none)":
-                    return []
+                    top_moves = []
+                    break
             elif (("multipv" in current_line) and ("depth" in current_line) and 
                   current_line[current_line.index("depth") + 1] == self.depth):
                 multiPV_number = int(current_line[current_line.index("multipv") + 1])
@@ -232,8 +237,11 @@ class Stockfish:
                         "Mate": int(current_line[current_line.index("mate") + 1]) * multiplier if has_mate_value else None
                     })
             else:
-                return top_moves
-        raise RuntimeError("Reached the end of get_top_moves without returning anything.")
+                break
+        if old_MultiPV_value != self._parameters["MultiPV"]:
+            self._set_option("MultiPV", old_MultiPV_value)
+            self._parameters.update({"MultiPV": old_MultiPV_value})
+        return top_moves
 
     def get_best_move(self) -> Optional[str]:
         """Returns best move with current position on the board.
