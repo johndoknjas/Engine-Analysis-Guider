@@ -120,10 +120,6 @@ class Node:
         # On the topic of this, you should get the goal evaluation from the user 
         # and pass it in to the constructor.
         
-        # CONTINUE HERE - Also account for cases where self.PVs is None, due to
-        # there being no moves in the position. Will have to get the evaluation some
-        # other way.
-        
         if self.PVs == None:
             # There are no moves in this position, so set self.evaluation
             # to the evaluation stockfish directly gives in this position.
@@ -137,16 +133,16 @@ class Node:
                 self.evaluation = 0
         elif node_depth == search_depth:
             # At a leaf node in the tree.
-            if self.PVs["1"]["Centipawn"] != None:
-                self.evaluation = self.PVs["1"]["Centipawn"]
-            elif (self.PVs["1"]["Mate"] > 0):
+            if self.PVs[1]["Centipawn"] != None:
+                self.evaluation = self.PVs[1]["Centipawn"]
+            elif (self.PVs[1]["Mate"] > 0):
                 self.evaluation = MAX_INTEGER
             else:
                 self.evaluation = MIN_INTEGER
         else:
             current_PV_num = 1
-            while (self.PVs.get(str(current_PV_num), None) != None):
-                new_move = self.PVs.get(str(current_PV_num))["Move"]
+            while (self.PVs.get(current_PV_num, None) != None):
+                new_move = self.PVs.get(current_PV_num)["Move"]
                 new_FEN = make_move(self.FEN, new_move)
                 child_node = Node(self, new_FEN, search_depth, node_depth + 1, new_move)
                 # Note that the self arg above will be the parent_node param

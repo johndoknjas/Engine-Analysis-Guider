@@ -1,5 +1,6 @@
 """
     This module implements the Stockfish class.
+
     :copyright: (c) 2016-2021 by Ilya Zhelyabuzhsky.
     :license: MIT, see LICENSE for more details.
 """
@@ -188,16 +189,22 @@ class Stockfish:
         self._put(f"position fen {fen_position}")
         
     def get_top_moves(self, num_top_moves: int) -> dict:
-        """ Returns the top num_top_moves moves in the current position.
-        Will return a dictionary of string-string pairs representing the best moves.
-        The key is the PV number (as a string), and the value is the first move.        
+        """Returns info on the top moves/PVs in the position.
         
-        If there is an error, then an exception will be raised.
-        If it's a mate now, then None is returned.        
+        Args:
+            num_top_moves:
+                The number of moves to return info on, assuming there are at least
+                those many legal moves. num_top_moves must not exceed the MultiPV parameter.
+        
+        Returns:
+            A dictionary where the keys are the PV number, and the values
+            are sub-dictionaries with keys for Move, Centipawn, and Mate. The corresponding
+            value for either Centipawn or Mate will be None.
+            If there are no moves in the position, None is returned.
         """
         
         if num_top_moves > self._parameters["MultiPV"] or num_top_moves <= 0:
-            raise ValueError('bad value for num_top_moves')
+            raise ValueError("num_top_moves is either greater than MultiPV or not a positive number.")
         self._go()
         lines = []
         while True:
@@ -206,11 +213,10 @@ class Stockfish:
             lines.append(splitted_text)
             if splitted_text[0] == "bestmove":
                 break # since the line outputting the bestmove is the last line.
-        first_moves_of_PVs = {
-            # This is a ditionary. The key is the multiPV number of this line, and
-            # the value will be another dictionary containing info for the PV 
-            # (i.e., the first move of the PV, and other info about it).
-        }
+        first_moves_of_PVs = {}
+        # This is a ditionary. The key is the multiPV number of this line, and
+        # the value will be another dictionary containing info for the PV 
+        # (i.e., the first move of the PV, and other info about it).
         multiplier = 1 if ("w" in self.get_fen_position()) else -1
         # Traversing in reverse order is important since the finalized info
         # is outputted at the end. To see this, in the terminal do "./stockfish", then
@@ -223,8 +229,8 @@ class Stockfish:
                     return None
             elif (("multipv" in current_line) and ("depth" in current_line) and 
                   current_line[current_line.index("depth") + 1] == self.depth):
-                multiPV_number = current_line[current_line.index("multipv") + 1]
-                if int(multiPV_number) <= num_top_moves:
+                multiPV_number = int(current_line[current_line.index("multipv") + 1])
+                if multiPV_number <= num_top_moves:
                     has_centipawn_value = ("cp" in current_line)
                     has_mate_value = ("mate" in current_line)
                     if has_centipawn_value == has_mate_value:
