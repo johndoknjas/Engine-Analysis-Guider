@@ -17,6 +17,7 @@ import subprocess
 from typing import Any, List, Optional
 import copy
 
+
 class Stockfish:
     """Integrates the Stockfish chess engine with Python."""
 
@@ -57,10 +58,11 @@ class Stockfish:
         for name, value in list(self._parameters.items()):
             self._set_option(name, value)
 
-        self._start_new_game()            
+        self._start_new_game()
 
     def get_parameters(self) -> dict:
         """Returns current board position.
+
         Returns:
             Dictionary of current Stockfish engine's parameters.
         """
@@ -68,6 +70,7 @@ class Stockfish:
 
     def reset_parameters(self) -> None:
         """Resets the stockfish parameters.
+
         Returns:
             None
         """
@@ -116,6 +119,7 @@ class Stockfish:
 
     def set_position(self, moves: List[str] = None) -> None:
         """Sets current board position.
+
         Args:
             moves:
               A list of moves to set this position on the board.
@@ -129,6 +133,7 @@ class Stockfish:
 
     def get_board_visual(self) -> str:
         """Returns a visual representation of the current board position.
+
         Returns:
             String of visual representation of the chessboard with its pieces in current position.
         """
@@ -144,6 +149,7 @@ class Stockfish:
 
     def get_fen_position(self) -> str:
         """Returns current board position in Forsyth–Edwards notation (FEN).
+
         Returns:
             String with current position in Forsyth–Edwards notation (FEN)
         """
@@ -156,9 +162,11 @@ class Stockfish:
 
     def set_skill_level(self, skill_level: int = 20) -> None:
         """Sets current skill level of stockfish engine.
+
         Args:
             skill_level:
               Skill Level option between 0 (weakest level) and 20 (full strength)
+
         Returns:
             None
         """
@@ -168,8 +176,10 @@ class Stockfish:
 
     def set_elo_rating(self, elo_rating: int = 1350) -> None:
         """Sets current elo rating of stockfish engine, ignoring skill level.
+
         Args:
             elo_rating: Aim for an engine strength of the given Elo
+
         Returns:
             None
         """
@@ -179,15 +189,105 @@ class Stockfish:
 
     def set_fen_position(self, fen_position: str) -> None:
         """Sets current board position in Forsyth–Edwards notation (FEN).
+
         Args:
             fen_position:
               FEN string of board position.
+
         Returns:
             None
         """
         self._start_new_game()
         self._put(f"position fen {fen_position}")
-        
+
+    def get_best_move(self) -> Optional[str]:
+        """Returns best move with current position on the board.
+
+        Returns:
+            A string of move in algebraic notation or None, if it's a mate now.
+        """
+        self._go()
+        last_text: str = ""
+        while True:
+            text = self._read_line()
+            splitted_text = text.split(" ")
+            if splitted_text[0] == "bestmove":
+                if splitted_text[1] == "(none)":
+                    return None
+                self.info = last_text
+                return splitted_text[1]
+            last_text = text
+
+    def get_best_move_time(self, time: int = 1000) -> Optional[str]:
+        """Returns best move with current position on the board after a determined time
+
+        Args:
+            time:
+              Time for stockfish to determine best move in milliseconds (int)
+
+        Returns:
+            A string of move in algebraic notation or None, if it's a mate now.
+        """
+        self._go_time(time)
+        last_text: str = ""
+        while True:
+            text = self._read_line()
+            splitted_text = text.split(" ")
+            if splitted_text[0] == "bestmove":
+                if splitted_text[1] == "(none)":
+                    return None
+                self.info = last_text
+                return splitted_text[1]
+            last_text = text
+
+    def is_move_correct(self, move_value: str) -> bool:
+        """Checks new move.
+
+        Args:
+            move_value:
+              New move value in algebraic notation.
+
+        Returns:
+            True, if new move is correct, else False.
+        """
+        self._put(f"go depth 1 searchmoves {move_value}")
+        while True:
+            text = self._read_line()
+            splitted_text = text.split(" ")
+            if splitted_text[0] == "bestmove":
+                if splitted_text[1] == "(none)":
+                    return False
+                else:
+                    return True
+
+    def get_evaluation(self) -> dict:
+        """Evaluates current position
+
+        Returns:
+            A dictionary of the current advantage with "type" as "cp" (centipawns) or "mate" (checkmate in)
+        """
+
+        evaluation = dict()
+        fen_position = self.get_fen_position() # this line and the ._put line below should be redundant.
+        if "w" in fen_position:  # w can only be in FEN if it is whites move
+            compare = 1
+        else:  # stockfish shows advantage relative to current player, convention is to do white positive
+            compare = -1
+        self._put(f"position {fen_position}")
+        self._go()
+        while True:
+            text = self._read_line()
+            splitted_text = text.split(" ")
+            if splitted_text[0] == "info":
+                for n in range(len(splitted_text)):
+                    if splitted_text[n] == "score":
+                        evaluation = {
+                            "type": splitted_text[n + 1],
+                            "value": int(splitted_text[n + 2]) * compare,
+                        }
+            elif splitted_text[0] == "bestmove":
+                return evaluation
+
     def get_top_moves(self, num_top_moves: int = 5) -> List[dict]:
         """Returns info on the top moves in the position.
 
@@ -257,94 +357,9 @@ class Stockfish:
             self._parameters.update({"MultiPV": old_MultiPV_value})
         return top_moves
 
-    def get_best_move(self) -> Optional[str]:
-        """Returns best move with current position on the board.
-        Returns:
-            A string of move in algebraic notation or None, if it's a mate now.
-        """
-        self._go()
-        last_text: str = ""
-        while True:
-            text = self._read_line()
-            splitted_text = text.split(" ")
-            if splitted_text[0] == "bestmove":
-                if splitted_text[1] == "(none)":
-                    return None
-                self.info = last_text
-                return splitted_text[1]
-            last_text = text
-
-    def get_best_move_time(self, time: int = 1000) -> Optional[str]:
-        """Returns best move with current position on the board after a determined time
-        Args:
-            time:
-              Time for stockfish to determine best move in milliseconds (int)
-        Returns:
-            A string of move in algebraic notation or None, if it's a mate now.
-        """
-        self._go_time(time)
-        last_text: str = ""
-        while True:
-            text = self._read_line()
-            splitted_text = text.split(" ")
-            if splitted_text[0] == "bestmove":
-                if splitted_text[1] == "(none)":
-                    return None
-                self.info = last_text
-                return splitted_text[1]
-            last_text = text
-
-    def is_move_correct(self, move_value: str) -> bool:
-        """Checks new move.
-        Args:
-            move_value:
-              New move value in algebraic notation.
-        Returns:
-            True, if new move is correct, else False.
-        """
-        self._put(f"go depth 1 searchmoves {move_value}")
-        while True:
-            text = self._read_line()
-            splitted_text = text.split(" ")
-            if splitted_text[0] == "bestmove":
-                if splitted_text[1] == "(none)":
-                    return False
-                else:
-                    return True
-
-    def get_evaluation(self) -> dict:
-        """Evaluates current position
-        Returns:
-            A dictionary of the current advantage with "type" as "cp" (centipawns) or "mate" (checkmate in)
-        """
-        
-        # CONTINUE HERE - Examine this function to see how it gets the evaluation. Figure out if
-        # it's the method you're using to get the evaluation yourself, and if the methods differ
-        # then figure out which is better to do.
-
-        evaluation = dict()
-        fen_position = self.get_fen_position() # this line and the ._put line below should be redundant.
-        if "w" in fen_position:  # w can only be in FEN if it is whites move
-            compare = 1
-        else:  # stockfish shows advantage relative to current player, convention is to do white positive
-            compare = -1
-        self._put(f"position {fen_position}")
-        self._go()
-        while True:
-            text = self._read_line()
-            splitted_text = text.split(" ")
-            if splitted_text[0] == "info":
-                for n in range(len(splitted_text)):
-                    if splitted_text[n] == "score":
-                        evaluation = {
-                            "type": splitted_text[n + 1],
-                            "value": int(splitted_text[n + 2]) * compare,
-                        }
-            elif splitted_text[0] == "bestmove":
-                return evaluation
-
     def set_depth(self, depth_value: int = 2) -> None:
         """Sets current depth of stockfish engine.
+
         Args:
             depth_value: Depth option higher than 1
         """
@@ -352,6 +367,7 @@ class Stockfish:
 
     def get_stockfish_major_version(self):
         """Returns Stockfish engine major version.
+
         Returns:
             Current stockfish major version
         """
