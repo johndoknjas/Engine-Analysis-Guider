@@ -69,7 +69,17 @@
 # there seems to no longer be the problem with the best move not match the first move
 # of the top PV. Test further by outputting the lines in get_top_moves to ensure
 # this is always the case. Also, test if the evaluation equals the evaluation of the
-# top PV (it should). If this is all so, then great.    
+# top PV (it should). If this is all so, then great.
+
+# It looks like the above is the case, as I've been using the official SF release for a while
+# and it's all good. But try to figure out whether/why this was an issue before (checkout earlier commits
+# and experiment). If it was due to using a different release (or a version in-between releases), then will 
+# this be a problem for anyone using one of these versions of SF? Both for currently avaiable versions
+# and versions that could be out in the future.
+    # If it is in fact an issue, then maybe look into modifying get_top_moves() to accommodate this?
+    # Also, if it's an issue for get_top_moves, then experiment with other functions in models.py to see
+    # if there's any issues there as well. But even in this scenario there likely won't be any issue, since
+    # the problem in the first place before was the top move's first move not matching the best move SF outputted.
 
 from functools import cmp_to_key
 from models import Stockfish
