@@ -195,6 +195,13 @@ def make_move(old_FEN, move):
     # to test if the tree is correct. Since now it will flip whose move it is
     # on each new node, as well as update the position with a move.
     
+    # CONTINUE HERE - Look at the CONTINUE HERE note in set_position() of models.py. If there's
+    # a way to make that work, then no need to do this function here. 
+    # Note that this will ideally update stockfish with a new position, but you should still return the FEN
+    # since it's useful to store in a Node. E.g., when backtracking on the tree from child --> parent, you'd
+    # want to re-update Stockfish's position with the parent's FEN (in preparation for continuing to its
+    # other children).
+    
     # PLACEHOLDER:
     return (old_FEN.replace(' w ', ' b ', 1) if is_whites_turn(old_FEN) else old_FEN.replace(' b ', ' w ', 1))
 

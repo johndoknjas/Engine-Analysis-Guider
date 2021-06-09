@@ -126,6 +126,10 @@ class Stockfish:
               Must be in full algebraic notation.
               example: ['e2e4', 'e7e5']
         """
+        # CONTINUE HERE - If there's some way to modify the code in this function to not go to the starting
+        # position of chess, and instead stay on the current FEN while also making the moves, then do that.
+        # The self._put command below goes to the starting position and then makes the moves - the goal is
+        # to find a way to just do the second step.
         self._start_new_game()
         if moves is None:
             moves = []
