@@ -1,23 +1,4 @@
-## TODO:
-
-# Modify the stockfish code in search.cpp to do sync_cout << "secondbestmove " << ...
-# for the second best move. Could also do this for the third best. Make sure to check that
-# there are at least 2-3 moves.
-    # For the exe you end up using (generated after modifying the stockfish code),
-    # include the entire stockfish repository in this project. Your modifications to the code
-    # should be made available, if including the exe in the project.
-
-# Clone the python stockfish and add code that deals with getting the second and third best
-# moves, identifying them based off the third "secondbestmove" and "thirdbestmove". Since
-# you'll be modifying the code, the python stockfish stuff will be added to this project,
-# and can be used that way (instead of having to be used with the pip install currently).
-    # Note that to get the second best move, MultiPV must be at least 2. To get the third best, MultiPV must
-    # be at least 3. Etc.    
-    
-    # Not sure if you'll have to do pip uninstall to make sure you use the code you will
-    # clone for Python Stockfish (instead of using what pip install provides).
-    
-## IDEAS:
+# IDEAS:
     
 # The amount of time to let Stockfish think on a normal position in the calculation
 # tree (e.g., depth 28) should differ from the amount of time it thinks when in a final

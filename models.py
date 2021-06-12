@@ -130,6 +130,17 @@ class Stockfish:
         # position of chess, and instead stay on the current FEN while also making the moves, then do that.
         # The self._put command below goes to the starting position and then makes the moves - the goal is
         # to find a way to just do the second step.
+        
+        # For making the new function, could call it something like "make_moves_from_current_position"
+        # Don't change this set_position function or its name though, in order to ensure backwards compatability
+        # for anyone using the python stockfish library.
+        
+        # A test for your new function could involve setting up a position, making a move (or moves, by sending multiple
+        # moves in a list to the function), and then ensuring the new position for the Stockfish instance matches 
+        # the expected FEN. Could try special moves like castling, en passant, etc, although any test good.
+        # Also do test(s) where this set_position function is sent a list of move(s) to play, and then on another call
+        # sent another list. Then, ensure the Stockfish instance's FEN position matches what's expected.
+        
         self._start_new_game()
         if moves is None:
             moves = []
