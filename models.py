@@ -138,7 +138,7 @@ class Stockfish:
             moves:
               A list of moves to set this position on the board.
               Must be in full algebraic notation.
-              example: ['e2e4', 'e7e5']
+              example: ['g4d7', 'a8b8']
         """
         
         # A test for your new function could involve setting up a position, making a move (or moves, by sending multiple
@@ -151,6 +151,8 @@ class Stockfish:
         # then copy your changes in models.py into a new branch in the fork clone. Also copy your tests, modified
         # as needed. Also run black, mypy, etc.
         
+        if moves == []:
+            raise ValueError("No moves sent in to the make_moves_from_current_position function.")
         fen_position = self.get_fen_position()        
         self._start_new_game()
         self._put(f"position fen {fen_position} moves {self._convert_move_list_to_str(moves)}")
