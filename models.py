@@ -140,17 +140,6 @@ class Stockfish:
               Must be in full algebraic notation.
               example: ['g4d7', 'a8b8']
         """
-        
-        # A test for your new function could involve setting up a position, making a move (or moves, by sending multiple
-        # moves in a list to the function), and then ensuring the new position for the Stockfish instance matches 
-        # the expected FEN. Could try special moves like castling, en passant, etc, although any test good.
-        # Also do test(s) where this set_position function is sent a list of move(s) to play, and then on another call
-        # sent another list. Then, ensure the Stockfish instance's FEN position matches what's expected.
-        
-        # CONTINUE HERE - Write tests for this function, as discussed in the comments right above. If the tests pass,
-        # then copy your changes in models.py into a new branch in the fork clone. Also copy your tests, modified
-        # as needed. Also run black, mypy, etc.
-        
         if moves == []:
             raise ValueError("No moves sent in to the make_moves_from_current_position function.")
         fen_position = self.get_fen_position()        
