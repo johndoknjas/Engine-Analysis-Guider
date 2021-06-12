@@ -126,14 +126,20 @@ class Stockfish:
               Must be in full algebraic notation.
               example: ['e2e4', 'e7e5']
         """
-        # CONTINUE HERE - If there's some way to modify the code in this function to not go to the starting
-        # position of chess, and instead stay on the current FEN while also making the moves, then do that.
-        # The self._put command below goes to the starting position and then makes the moves - the goal is
-        # to find a way to just do the second step.
+        self._start_new_game()
+        if moves is None:
+            moves = []
+        self._put(f"position startpos moves {self._convert_move_list_to_str(moves)}")
+    
+    def make_moves_from_current_position(self, moves: List[str]) -> None:
+        """Sets the board position by making the moves from the current position.
         
-        # For making the new function, could call it something like "make_moves_from_current_position"
-        # Don't change this set_position function or its name though, in order to ensure backwards compatability
-        # for anyone using the python stockfish library.
+        Args:
+            moves:
+              A list of moves to set this position on the board.
+              Must be in full algebraic notation.
+              example: ['e2e4', 'e7e5']
+        """
         
         # A test for your new function could involve setting up a position, making a move (or moves, by sending multiple
         # moves in a list to the function), and then ensuring the new position for the Stockfish instance matches 
@@ -141,10 +147,13 @@ class Stockfish:
         # Also do test(s) where this set_position function is sent a list of move(s) to play, and then on another call
         # sent another list. Then, ensure the Stockfish instance's FEN position matches what's expected.
         
+        # CONTINUE HERE - Write tests for this function, as discussed in the comments right above. If the tests pass,
+        # then copy your changes in models.py into a new branch in the fork clone. Also copy your tests, modified
+        # as needed. Also run black, mypy, etc.
+        
+        fen_position = self.get_fen_position()        
         self._start_new_game()
-        if moves is None:
-            moves = []
-        self._put(f"position startpos moves {self._convert_move_list_to_str(moves)}")
+        self._put(f"position fen {fen_position} moves {self._convert_move_list_to_str(moves)}")
 
     def get_board_visual(self) -> str:
         """Returns a visual representation of the current board position.
