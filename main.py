@@ -40,7 +40,17 @@
 # that you have trouble with. E.g., the ...Bg4 classical line where Black meets f4 with ...Ned7 instead of ...Bxe2.
 # For that, the user would set the depth parameter to be pretty high, since the goal is to fine some ~0.40 evaluation
 # that holds going quite deeply.
-    
+
+# For models.py, when setting the Stockfish instance up with a new position, the engine starts a new game
+# and then goes to the position. So, this may mean no using the TT as going through the Node search tree.
+# Also, SF wouldn't be able to recognize three folds, which could happen at around depth 6 or higher. However,
+# this likely isn't a big deal as it will evaluate 0.00 anyway.
+    # EDIT - Due to making moves based off the current FEN, SF will be able to use info about the previous
+    # FEN to generate the new FEN. E.g., number of full moves that have happened in the game total, the number
+    # of plies currently counting towards the 50 move rule. However, it still may not be able to do stuff like use
+    # the TT or recognize 3 fold repetitions, as these things aren't embedded in an FEN. But experiment and see
+    # if SF has some way to doing this anyway (after all, in chessbase SF can recognize three folds... although
+    # maybe chessbase doesn't start a new game with the "ucinewgame" command whenever updating a position).
     
 
 
