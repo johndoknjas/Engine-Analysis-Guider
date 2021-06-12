@@ -131,6 +131,10 @@ class Stockfish:
             moves = []
         self._put(f"position startpos moves {self._convert_move_list_to_str(moves)}")
     
+    # CONTINUE HERE - Copy and paste the function from the fork's models.py
+    # here to replace this one, after the fork's PR is accepted and you've done
+    # any necessary revisions to it. Currently there should be no functional
+    # difference between both functions though, so it's fine to use what you have here for now.
     def make_moves_from_current_position(self, moves: List[str]) -> None:
         """Sets the board position by making the moves from the current position.
         
