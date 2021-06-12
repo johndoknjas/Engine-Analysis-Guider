@@ -183,6 +183,17 @@ class Node:
                     assert self.PVs[i-1]["Centipawn"] <= self.PVs[i]["Centipawn"]
 
 def make_move(old_FEN, move):
+    # CONTINUE HERE - Given the function you added to models.py, this function should be unnecessary.
+    # (still check over the notes below though just in case). So instead, use that function in models.py
+    # to update SF. But make sure the record each Node's FEN as an attribute of the Node, so that when
+    # going back to the node in the search tree, SF can get that position (in order to then go to the FEN
+    # of another of the Node's child).
+    # All the Nodes will share the same global stockfish instance, so when arriving at a Node (be it going to
+    # a child node or going back to a parent node) make sure to update SF with whatever the new FEN is.
+    # After this is all set up, then you can test things are running smoothly by examining the output tree.
+    
+    #####################
+    
     # CONTINUE HERE - return the FEN that results from making move on old_FEN.
     # It looks like models.py doesn't have a function to handle this.
     
