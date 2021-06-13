@@ -184,13 +184,33 @@ class Node:
 
 def make_move(old_FEN, move):
     # CONTINUE HERE - Given the function you added to models.py, this function should be unnecessary.
-    # (still check over the notes below though just in case). So instead, use that function in models.py
+    # (still check over the notes below the ############ though just in case). So instead, use that function in models.py
     # to update SF. But make sure the record each Node's FEN as an attribute of the Node, so that when
     # going back to the node in the search tree, SF can get that position (in order to then go to the FEN
     # of another of the Node's child).
     # All the Nodes will share the same global stockfish instance, so when arriving at a Node (be it going to
     # a child node or going back to a parent node) make sure to update SF with whatever the new FEN is.
     # After this is all set up, then you can test things are running smoothly by examining the output tree.
+    
+    # Note that two positions with the same piece and pawn arrangements can have different FENs, as a
+    # result of using the function in models.py. E.g., f3d4 b8c6 b1c3 f7f5 versus f3d4 f7f5 b1c3 b8c6.
+    # If there's a White pawn on e5, then in one of the FENs the f6-square will be recorded as a square
+    # that en passant can happen on. Also: b1c3 g8f7 c3b1 f6g8. This will have a different FEN than the position
+    # it started in two moves ago, since the fullmove counter value will be increased by 2. Or
+    # g1f3 g8f6 d2d4 versus d2d4 g8f6 g1f3. These will result in different FENs due to different halfmove clock
+    # values for them. Also moving an uncastled king to a square, and then back, will result in a differnt FEN, 
+    # since no castling rights (or moving one of the rooks to a square and back, since no castling rights to that
+    # side of the board).
+    # All of this is good, since the new FEN of a position should be based off data from the parent Node's FEN.
+    # After all, you are searching/guiding the engine ahead in a calculation tree. But for looking an FEN up in an 
+    # SQL database or dictionary, you shouldn't care about the fullmove values or halfmove clock or fullmove counter 
+    # values. These don't affect the position itself (the fullmove counter is irrelevant, and the halfmove counter 
+    # is only relevant if nearing the 50 move rule, and even here the engine would probably give 0.00 anyway), and 
+    # so it's fine to use an already derived evaluation in the DB / dictionary for a position with the same 
+    # piece/pawn placement. However, if an FEN differs in castling rights, or if one has a certain square for 
+    # en passant (or they have different en passant squares), then the DB / dictionary should not be used, as it's 
+    # a unique position.
+    
     
     #####################
     
