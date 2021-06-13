@@ -183,6 +183,31 @@ class Node:
                     assert self.PVs[i-1]["Centipawn"] <= self.PVs[i]["Centipawn"]
 
 def make_move(old_FEN, move):
+    # CONTINUE HERE:
+    # For the make_move function, the "ucinewgame" token will no longer be set. The only consequence
+    # of this that actually matters is that the TT will be preserved. In a test I wrote the engine
+    # was faster when having the TT to work with after going from a parent node to a child node that
+    # it had to find the best move for.
+    
+    # Also in set_fen_position, I've added a parameter that can let you opt to not reset the TT.
+    # This could be a little useful when going from child node --> parent node. How useful it is depends
+    # on how much of the data from the parent node is still in the TT. If the child node has overridden
+    # most/all of it, then the TT won't be very useful for searching the other children of the parent node
+    # (or ancestors of the parent). But even in this case it shouldn't be detrimental? Unless having an
+    # empty TT is somehow superior. Maybe at some point do tests with keeping/discarding the
+    # TT when going from child node --> parent node, and with benchmarking figure out
+    # which tends to result in a faster search throughout the Node tree.
+    
+    # Note that I asked in the SF discord if it's okay to not send the "ucinewgame" token when
+    # setting a new position, and it's fine (no matter if going from parent node --> child node or
+    # child node --> parent node in your app). Basically the "ucinewgame" token should only be used
+    # when starting a new game from scratch, or a position that's completely different (even then
+    # I don't think is HAS to be used). So for going to a similar position, it makes sense (and is safe) 
+    # to not call it.
+    
+    
+    #==============================
+    
     # CONTINUE HERE - Given the function you added to models.py, this function should be unnecessary.
     # (still check over the notes below the ############ though just in case). So instead, use that function in models.py
     # to update SF. But make sure the record each Node's FEN as an attribute of the Node, so that when
