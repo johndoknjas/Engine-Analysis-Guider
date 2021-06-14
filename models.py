@@ -133,8 +133,12 @@ class Stockfish:
     
     # CONTINUE HERE - Copy and paste the function from the fork's models.py
     # here to replace this one, after the fork's PR is accepted and you've done
-    # any necessary revisions to it. Currently there should be no functional
-    # difference between both functions though, so it's fine to use what you have here for now.
+    # any necessary revisions to it.
+    # Also update the set_fen_position function with changes from the fork,
+    # and other various things (like stuff related to start_new_game being removed).
+    # After making all the changes, compare the entire models.py file here
+    # with the one in the fork, and ensure they are equivalent (other than a few comments
+    # that are supposed to be in only one file and not the other).
     def make_moves_from_current_position(self, moves: List[str]) -> None:
         """Sets the board position by making the moves from the current position.
         
