@@ -183,6 +183,9 @@ class Node:
                     assert self.PVs[i-1]["Centipawn"] <= self.PVs[i]["Centipawn"]
 
 def make_move(old_FEN, move):
+    # CONTIUE HERE - for what to do next, see the higher comments here, as well as the to do word doc from
+    # June 15.    
+    
     # CONTINUE HERE:
     # For the make_move function, the "ucinewgame" token will no longer be set. The only consequence
     # of this that actually matters is that the TT will be preserved. In a test I wrote the engine
