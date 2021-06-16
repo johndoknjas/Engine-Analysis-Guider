@@ -58,7 +58,7 @@ class Stockfish:
         for name, value in list(self._parameters.items()):
             self._set_option(name, value)
 
-        self._start_new_game()
+        self._prepare_for_new_position(True)
 
     def get_parameters(self) -> dict:
         """Returns current board position.
@@ -78,8 +78,9 @@ class Stockfish:
         for name, value in list(self._parameters.items()):
             self._set_option(name, value)
 
-    def _start_new_game(self) -> None:
-        self._put("ucinewgame")
+    def _prepare_for_new_position(self, send_ucinewgame_token: bool = True) -> None:
+        if send_ucinewgame_token:
+            self._put("ucinewgame")
         self._is_ready()
         self.info = ""
 
@@ -126,33 +127,28 @@ class Stockfish:
               Must be in full algebraic notation.
               example: ['e2e4', 'e7e5']
         """
-        self._start_new_game()
+        self._prepare_for_new_position(True)
         if moves is None:
             moves = []
         self._put(f"position startpos moves {self._convert_move_list_to_str(moves)}")
-    
-    # CONTINUE HERE - Copy and paste the function from the fork's models.py
-    # here to replace this one, after the fork's PR is accepted and you've done
-    # any necessary revisions to it.
-    # Also update the set_fen_position function with changes from the fork,
-    # and other various things (like stuff related to start_new_game being removed).
-    # After making all the changes, compare the entire models.py file here
-    # with the one in the fork, and ensure they are equivalent (other than a few comments
-    # that are supposed to be in only one file and not the other).
+
     def make_moves_from_current_position(self, moves: List[str]) -> None:
-        """Sets the board position by making the moves from the current position.
-        
+        """Sets a new position by playing the moves from the current position.
+
         Args:
             moves:
-              A list of moves to set this position on the board.
+              A list of moves to play in the current position, in order to reach a new position.
               Must be in full algebraic notation.
-              example: ['g4d7', 'a8b8']
+              Example: ["g4d7", "a8b8", "f1d1"]
         """
         if moves == []:
-            raise ValueError("No moves sent in to the make_moves_from_current_position function.")
-        fen_position = self.get_fen_position()        
-        self._start_new_game()
-        self._put(f"position fen {fen_position} moves {self._convert_move_list_to_str(moves)}")
+            raise ValueError(
+                "No moves sent in to the make_moves_from_current_position function."
+            )
+        self._prepare_for_new_position(False)
+        self._put(
+            f"position fen {self.get_fen_position()} moves {self._convert_move_list_to_str(moves)}"
+        )
 
     def get_board_visual(self) -> str:
         """Returns a visual representation of the current board position.
@@ -210,17 +206,24 @@ class Stockfish:
         self._set_option("UCI_Elo", elo_rating)
         self._parameters.update({"UCI_Elo": elo_rating})
 
-    def set_fen_position(self, fen_position: str) -> None:
+    def set_fen_position(
+        self, fen_position: str, send_ucinewgame_token: bool = True
+    ) -> None:
         """Sets current board position in Forsyth–Edwards notation (FEN).
 
         Args:
             fen_position:
               FEN string of board position.
 
+            send_ucinewgame_token:
+              Whether to send the "ucinewgame" token to the Stockfish engine.
+              The most prominent effect this will have is clearing Stockfish's transposition table,
+              which should be done if the new position is unrelated to the current position.
+
         Returns:
             None
         """
-        self._start_new_game()
+        self._prepare_for_new_position(send_ucinewgame_token)
         self._put(f"position fen {fen_position}")
 
     def get_best_move(self) -> Optional[str]:
@@ -291,7 +294,7 @@ class Stockfish:
         """
 
         evaluation = dict()
-        fen_position = self.get_fen_position() # this line and the ._put line below should be redundant.
+        fen_position = self.get_fen_position()
         if "w" in fen_position:  # w can only be in FEN if it is whites move
             compare = 1
         else:  # stockfish shows advantage relative to current player, convention is to do white positive
