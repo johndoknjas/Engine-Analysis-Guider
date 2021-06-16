@@ -321,6 +321,8 @@ def main():
     
     stockfish13 = Stockfish(path = r"C:\Users\johnd\Documents\Fun Coding Projects\Stockfish Guider\stockfish_13_win_x64_bmi2.exe",
                             depth = stockfish_depth, parameters = {"Threads": 4, "MultiPV": multiPV_num})
+    # CONTINUE HERE - Have some way for the user to enter a path on their own. If they don't enter a path
+    # (e.g., if you're the user), then it could default to the path you have here.
     
     root_node = Node(None, FEN, search_depth, 0, None)
     # CONTINUE HERE - after all the calculations are done, output the data for
