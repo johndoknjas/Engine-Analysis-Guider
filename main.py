@@ -51,6 +51,25 @@
     # the TT or recognize 3 fold repetitions, as these things aren't embedded in an FEN. But experiment and see
     # if SF has some way to doing this anyway (after all, in chessbase SF can recognize three folds... although
     # maybe chessbase doesn't start a new game with the "ucinewgame" command whenever updating a position).
+
+# Note that two positions with the same piece and pawn arrangements can have different FENs, as a
+    # result of using the function in models.py. E.g., f3d4 b8c6 b1c3 f7f5 versus f3d4 f7f5 b1c3 b8c6.
+    # If there's a White pawn on e5, then in one of the FENs the f6-square will be recorded as a square
+    # that en passant can happen on. Also: b1c3 g8f6 c3b1 f6g8. This will have a different FEN than the position
+    # it started in two moves ago, since the fullmove counter value will be increased by 2. Or
+    # g1f3 g8f6 d2d4 versus d2d4 g8f6 g1f3. These will result in different FENs due to different halfmove clock
+    # values for them. Also moving an uncastled king to a square, and then back, will result in a differnt FEN, 
+    # since no castling rights (or moving one of the rooks to a square and back, since no castling rights to that
+    # side of the board).
+    # All of this is good, since the new FEN of a position should be based off data from the parent Node's FEN.
+    # After all, you are searching/guiding the engine ahead in a calculation tree. But for looking an FEN up in an 
+    # SQL database or dictionary/hash table, you shouldn't care about the fullmove values or halfmove clock or fullmove counter 
+    # values. These don't affect the position itself (the fullmove counter is irrelevant, and the halfmove counter 
+    # is only relevant if nearing the 50 move rule, and even here the engine would probably give 0.00 anyway), and 
+    # so it's fine to use an already derived evaluation in the DB / dictionary / hash table for a position with the same 
+    # piece/pawn placement. However, if an FEN differs in castling rights, or if one has a certain square for 
+    # en passant (or they have different en passant squares), then the DB / dictionary should not be used, as it's 
+    # a unique position.
     
 
 
@@ -83,29 +102,46 @@ MIN_INTEGER = -1 * MAX_INTEGER
 
 stockfish13 = None
 
+# CONTINUE HERE - looks like the app is working. So now it's time to optimize things, and of course
+# do some more tests with the output tree. Go to the various CONTINUE HERE tags in the program
+# for things to do, and also browse the IDEAS section above. Maybe even check Issues on GitHub
+# in case you wrote anything unique there.
+
+# CONTINUE HERE - Play around with testing more positions with the app, and examine the output tree.
+# Try to check if it works with positoins where both sides can mate, or positions where one
+# side has multiple ways to mate, etc. Seems good with what I've tested so far. Still a little
+# slow though (2-3x slower than what I'd expect sometimes, although maybe my calculations for expectations
+# are flawed).
+
 class Node:
     
-    def __init__(self, parent_node, FEN, search_depth, node_depth, last_move):
+    def __init__(self, parent_node, FEN, search_depth, node_depth, node_move, white_to_move):
         global stockfish13
+        
+        # Note that FEN is the FEN of the parent, and node_move still has to be
+        # made on the FEN. The only exception to this is if this is the initialization
+        # of the root node, in which case the FEN is the root node's FEN and
+        # node_move equals None.
+        
+        # Meanwhile, the the other constructor arguments are all up to date with what
+        # this Node's fields should be, and they will be set equal to them below.
         
         if node_depth > search_depth:
             raise ValueError("node_depth > search_depth")
         
         self.children = [] # CONTINUE HERE - consider maybe changing to a dictionary?
         self.evaluation = None
-        self.white_to_move = is_whites_turn(FEN)
+        self.white_to_move = white_to_move
         self.parent_node = parent_node
-        self.FEN = FEN
         self.search_depth = search_depth
         self.node_depth = node_depth
-        self.last_move = last_move
+        self.node_move = node_move
         
-        # CONTINUE HERE - use stockfish instance to get dict of dicts.
-        # Then create each child node and add it to the self.children list,
-        # and then get each of them to search. Or don't.
-        
-        stockfish13.set_fen_position(FEN)
+        stockfish13.set_fen_position(FEN, node_depth == 0)
+        if self.node_move is not None:
+            stockfish13.make_moves_from_current_position([self.node_move])
         parameters = stockfish13.get_parameters()
+        self.FEN = stockfish13.get_fen_position()
         self.PVs = stockfish13.get_top_moves(int(parameters["MultiPV"]))
         self.check_PVs_sorted()
         # CONTINUE HERE - An optimization could be to check if this is a leaf node
@@ -122,7 +158,7 @@ class Node:
         # On the topic of this, you should get the goal evaluation from the user 
         # and pass it in to the constructor.
         
-        if self.PVs == []:
+        if not self.PVs:
             # There are no moves in this position, so set self.evaluation
             # to the evaluation stockfish directly gives in this position.
             # It will either be a mate or a stalemate.
@@ -130,6 +166,12 @@ class Node:
             # get_evaluation() to temporarily set the multiPV value to 1. Or, just make sure
             # multiPV is set to 1 by default, and when get_top_moves() is called, it gets set to some
             # number n, but then reset to 1 (making it always = 1 when get_evaluation() is called).
+        
+            # Another (better?) option is just calling get_top_moves(1) instead of get_evaluation(),
+            # although you will have to modify
+            # the immediate behavior in the scope of this if statement (return value will be a list containing
+            # a single dictionary - I think then you will just use the Mate / Centipawn value of the move,
+            # which will be the top move in this position).
             assert(evaluation_dict["value"] == 0)
             if evaluation_dict["type"] == "mate":
                 self.evaluation = MIN_INTEGER if self.white_to_move else MAX_INTEGER
@@ -138,7 +180,7 @@ class Node:
                 self.evaluation = 0
         elif node_depth == search_depth:
             # At a leaf node in the tree.
-            if self.PVs[0]["Centipawn"] != None:
+            if self.PVs[0]["Centipawn"] is not None:
                 self.evaluation = self.PVs[0]["Centipawn"]
             elif (self.PVs[0]["Mate"] > 0):
                 self.evaluation = MAX_INTEGER
@@ -146,14 +188,29 @@ class Node:
                 self.evaluation = MIN_INTEGER
         else:
             for current_PV in self.PVs:
+                # CONTINUE HERE:
+                # After going from each child back to parent in this loop, make sure to
+                # reset Stockfish's position with set_FEN_position(and with False param).
                 new_move = current_PV["Move"]
-                new_FEN = make_move(self.FEN, new_move)
-                child_node = Node(self, new_FEN, search_depth, node_depth + 1, new_move)
+                child_node = Node(self, self.FEN, search_depth, node_depth + 1, 
+                                  new_move, not(self.white_to_move))
+                stockfish13.set_fen_position(self.FEN, False)                 
                 # Note that the self arg above will be the parent_node param
                 # for the child_node.
+                
+                # The False arg says to not sent the "ucinewgame" token to stockfish; the most important
+                # effect of this is that it preserves the TT. This may help a little, even though it's going
+                # from child --> parent. You could try benchmarking tests experimenting with this
+                # arg being False and True, to see which is faster.
+                
+                # I asked in the SF discord and basically the "ucinewgame" token should only be used
+                # when starting a new game from scratch, or a position that's completely different (even then
+                # I don't think is HAS to be used). So for going to a similar position, it makes sense (and is safe) 
+                # to not call it. But again, benchmarking should be done to see if it actually helps.
+                
                 self.children.append(child_node)
                 self.children = sorted(self.children, key=cmp_to_key(self.compare_nodes))
-                if (self.evaluation == None or
+                if (self.evaluation is None or
                     (self.white_to_move and child_node.evaluation > self.evaluation) or
                     (not(self.white_to_move) and child_node.evaluation < self.evaluation)):
                         self.evaluation = child_node.evaluation
@@ -169,104 +226,49 @@ class Node:
     # CONTINUE HERE spots above for improving some details.
     
     def compare_nodes(self, first, second):
-        if first.evaluation == None or second.evaluation == None:
+        if first.evaluation is None or second.evaluation is None:
             raise ValueError("first.evaluation or second.evaluation has no value.")
         return (second.evaluation - first.evaluation) * (1 if self.white_to_move else -1)
     
     def check_PVs_sorted(self):
+        # CONTINUE HERE - Done rewriting this function, now test that
+        # the program works with the test position. After that, just optimization stuff
+        # which the comments describe. Also delete some obsolete comments that you've already
+        # implemented today.
         if len(self.PVs) <= 1:
             return
         for i in range(1, len(self.PVs)):
-            if self.PVs[i]["Mate"] != None:
-                assert self.PVs[i-1]["Mate"] != None
-            elif self.PVs[i-1]["Mate"] == None:
-                if self.white_to_move:
-                    assert self.PVs[i-1]["Centipawn"] >= self.PVs[i]["Centipawn"]
+            first_var = self.PVs[i-1]
+            second_var = self.PVs[i]
+            assert first_var["Mate"] is None or first_var["Mate"] != 0
+            assert second_var["Mate"] is None or second_var["Mate"] != 0
+            if first_var["Mate"] is None:
+                if second_var["Mate"] is None:
+                    assert (first_var["Centipawn"] == second_var["Centipawn"] or
+                            (self.white_to_move and first_var["Centipawn"] > second_var["Centipawn"]) or
+                            (not(self.white_to_move) and first_var["Centipawn"] < second_var["Centipawn"]))
+                else:                    
+                    assert (second_var["Mate"] < 0) == self.white_to_move
+            else:
+                # first_var["Mate"] isn't None
+                if second_var["Mate"] is None:
+                    if (first_var["Mate"] > 0) != self.white_to_move:
+                        print(first_var["Mate"])
+                        print("white to move" if self.white_to_move else "black to move")
+                    assert (first_var["Mate"] > 0) == self.white_to_move
                 else:
-                    assert self.PVs[i-1]["Centipawn"] <= self.PVs[i]["Centipawn"]
-
-def make_move(old_FEN, move):
-    # CONTIUE HERE - for what to do next, see the higher comments here, as well as the to do word doc from
-    # June 15.    
-    
-    # CONTINUE HERE:
-    # For the make_move function, the "ucinewgame" token will no longer be set. The only consequence
-    # of this that actually matters is that the TT will be preserved. In a test I wrote the engine
-    # was faster when having the TT to work with after going from a parent node to a child node that
-    # it had to find the best move for.
-    
-    # Also in set_fen_position, I've added a parameter that can let you opt to not reset the TT.
-    # This could be a little useful when going from child node --> parent node. How useful it is depends
-    # on how much of the data from the parent node is still in the TT. If the child node has overridden
-    # most/all of it, then the TT won't be very useful for searching the other children of the parent node
-    # (or ancestors of the parent). But even in this case it shouldn't be detrimental? Unless having an
-    # empty TT is somehow superior. Maybe at some point do tests with keeping/discarding the
-    # TT when going from child node --> parent node, and with benchmarking figure out
-    # which tends to result in a faster search throughout the Node tree.
-    
-    # Note that I asked in the SF discord if it's okay to not send the "ucinewgame" token when
-    # setting a new position, and it's fine (no matter if going from parent node --> child node or
-    # child node --> parent node in your app). Basically the "ucinewgame" token should only be used
-    # when starting a new game from scratch, or a position that's completely different (even then
-    # I don't think is HAS to be used). So for going to a similar position, it makes sense (and is safe) 
-    # to not call it.
-    
-    
-    #==============================
-    
-    # CONTINUE HERE - Given the function you added to models.py, this function should be unnecessary.
-    # (still check over the notes below the ############ though just in case). So instead, use that function in models.py
-    # to update SF. But make sure the record each Node's FEN as an attribute of the Node, so that when
-    # going back to the node in the search tree, SF can get that position (in order to then go to the FEN
-    # of another of the Node's child).
-    # All the Nodes will share the same global stockfish instance, so when arriving at a Node (be it going to
-    # a child node or going back to a parent node) make sure to update SF with whatever the new FEN is.
-    # After this is all set up, then you can test things are running smoothly by examining the output tree.
-    
-    # Note that two positions with the same piece and pawn arrangements can have different FENs, as a
-    # result of using the function in models.py. E.g., f3d4 b8c6 b1c3 f7f5 versus f3d4 f7f5 b1c3 b8c6.
-    # If there's a White pawn on e5, then in one of the FENs the f6-square will be recorded as a square
-    # that en passant can happen on. Also: b1c3 g8f7 c3b1 f6g8. This will have a different FEN than the position
-    # it started in two moves ago, since the fullmove counter value will be increased by 2. Or
-    # g1f3 g8f6 d2d4 versus d2d4 g8f6 g1f3. These will result in different FENs due to different halfmove clock
-    # values for them. Also moving an uncastled king to a square, and then back, will result in a differnt FEN, 
-    # since no castling rights (or moving one of the rooks to a square and back, since no castling rights to that
-    # side of the board).
-    # All of this is good, since the new FEN of a position should be based off data from the parent Node's FEN.
-    # After all, you are searching/guiding the engine ahead in a calculation tree. But for looking an FEN up in an 
-    # SQL database or dictionary, you shouldn't care about the fullmove values or halfmove clock or fullmove counter 
-    # values. These don't affect the position itself (the fullmove counter is irrelevant, and the halfmove counter 
-    # is only relevant if nearing the 50 move rule, and even here the engine would probably give 0.00 anyway), and 
-    # so it's fine to use an already derived evaluation in the DB / dictionary for a position with the same 
-    # piece/pawn placement. However, if an FEN differs in castling rights, or if one has a certain square for 
-    # en passant (or they have different en passant squares), then the DB / dictionary should not be used, as it's 
-    # a unique position.
-    
-    
-    #####################
-    
-    # CONTINUE HERE - return the FEN that results from making move on old_FEN.
-    # It looks like models.py doesn't have a function to handle this.
-    
-    # Among other things, you will have to flip whose move it is. Also, to be
-    # on the safe side, don't modify old_FEN (not sure whether it is immutable).
-    
-    # Idea: create a 2-D vector storing chars representing the pieces (e.g., P and p for white and black pawns).
-    # Also, for the move being made, ensure that it matches the side whose turn it is to move.
-    
-    # After completing this function, then you can truly use the output tree
-    # to test if the tree is correct. Since now it will flip whose move it is
-    # on each new node, as well as update the position with a move.
-    
-    # CONTINUE HERE - Look at the CONTINUE HERE note in set_position() of models.py. If there's
-    # a way to make that work, then no need to do this function here. 
-    # Note that this will ideally update stockfish with a new position, but you should still return the FEN
-    # since it's useful to store in a Node. E.g., when backtracking on the tree from child --> parent, you'd
-    # want to re-update Stockfish's position with the parent's FEN (in preparation for continuing to its
-    # other children).
-    
-    # PLACEHOLDER:
-    return (old_FEN.replace(' w ', ' b ', 1) if is_whites_turn(old_FEN) else old_FEN.replace(' b ', ' w ', 1))
+                    # second_var["Mate"] isn't None
+                    if first_var["Mate"] == second_var["Mate"]:
+                        continue
+                    elif self.white_to_move:
+                        assert not(first_var["Mate"] < 0 and second_var["Mate"] > 0)
+                        assert ((first_var["Mate"] > 0 and second_var["Mate"] < 0) or
+                                second_var["Mate"] > first_var["Mate"])
+                    else:
+                        # Black to move
+                        assert not(first_var["Mate"] > 0 and second_var["Mate"] < 0)
+                        assert ((first_var["Mate"] < 0 and second_var["Mate"] > 0) or
+                                second_var["Mate"] < first_var["Mate"])
 
 def output_tree(node):
     # CONTINUE HERE - Nothing to do in this function for now. But after writing the make_move function,
@@ -275,14 +277,14 @@ def output_tree(node):
     # evaluation is based off the top moves for both sides, which is good.
     
     print("node evaluation: " + str(node.evaluation))
-    if (node.children != []):
+    if node.children:
         print("Child nodes:")
         counter = 1
         for child_node in node.children:
-            print(str(counter) + ". Node move: " + child_node.last_move + ". Evaluation: " + str(child_node.evaluation))
+            print(str(counter) + ". Node move: " + child_node.node_move + ". Evaluation: " + str(child_node.evaluation))
             counter += 1
         print("To inspect a node in the above list, enter its corresponding number:")
-    if (node.parent_node != None):
+    if node.parent_node is not None:
         print("Or, enter P to return to the parent node.")
     print("Or, enter Q to quit.")
     while True:
@@ -290,7 +292,7 @@ def output_tree(node):
         if user_input == "q" or user_input == "Q":
             break
         elif user_input == "p" or user_input == "P":
-            if (node.parent_node != None):
+            if node.parent_node is not None:
                 output_tree(node.parent_node)
                 break
             else:
@@ -327,7 +329,7 @@ def main():
     # CONTINUE HERE - Have some way for the user to enter a path on their own. If they don't enter a path
     # (e.g., if you're the user), then it could default to the path you have here.
     
-    root_node = Node(None, FEN, search_depth, 0, None)
+    root_node = Node(None, FEN, search_depth, 0, None, is_whites_turn(FEN))
     # CONTINUE HERE - after all the calculations are done, output the data for
     # the root node. Could also traverse the whole tree and generate notation
     # that can be copied into chessbase (where the data for each position is

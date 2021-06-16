@@ -294,8 +294,8 @@ class Stockfish:
         """
         
         # CONTINUE HERE - Could at some point make a PR for temporarily adjusting the multiPV
-        # value in this function 1, in order to optimize the search. Could also remove
-        # the two redundant lines below.
+        # value in this function 1, in order to optimize the search (as well as in find_best_move). 
+        # Could also remove the two redundant lines below as part of the PR.
 
         evaluation = dict()
         fen_position = self.get_fen_position() # this line and the ._put line below should be redundant.
