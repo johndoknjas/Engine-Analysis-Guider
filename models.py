@@ -292,9 +292,13 @@ class Stockfish:
         Returns:
             A dictionary of the current advantage with "type" as "cp" (centipawns) or "mate" (checkmate in)
         """
+        
+        # CONTINUE HERE - Could at some point make a PR for temporarily adjusting the multiPV
+        # value in this function 1, in order to optimize the search. Could also remove
+        # the two redundant lines below.
 
         evaluation = dict()
-        fen_position = self.get_fen_position()
+        fen_position = self.get_fen_position() # this line and the ._put line below should be redundant.
         if "w" in fen_position:  # w can only be in FEN if it is whites move
             compare = 1
         else:  # stockfish shows advantage relative to current player, convention is to do white positive

@@ -126,7 +126,10 @@ class Node:
             # There are no moves in this position, so set self.evaluation
             # to the evaluation stockfish directly gives in this position.
             # It will either be a mate or a stalemate.
-            evaluation_dict = stockfish13.get_evaluation()
+            evaluation_dict = stockfish13.get_evaluation() # CONTINUE HERE - modify
+            # get_evaluation() to temporarily set the multiPV value to 1. Or, just make sure
+            # multiPV is set to 1 by default, and when get_top_moves() is called, it gets set to some
+            # number n, but then reset to 1 (making it always = 1 when get_evaluation() is called).
             assert(evaluation_dict["value"] == 0)
             if evaluation_dict["type"] == "mate":
                 self.evaluation = MIN_INTEGER if self.white_to_move else MAX_INTEGER
