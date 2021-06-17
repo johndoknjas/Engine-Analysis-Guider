@@ -70,6 +70,27 @@
     # piece/pawn placement. However, if an FEN differs in castling rights, or if one has a certain square for 
     # en passant (or they have different en passant squares), then the DB / dictionary should not be used, as it's 
     # a unique position.
+
+# Could display an ongoing estimate of how much the program is completed, every 10 seconds or something
+# Calculate by seeing how many nodes have been evaluated in total, and how many still have to be
+# evaluated (multiPV ^ depth, which can be stored in some global variable). If you get to a node that has an 
+# evaluation that makes you stop the search there (e.g., too far from the goal evaluation), then 
+# figure out the number of descendant nodes it has that have essentially been trimmed, and 
+# subtract that from the global variable that stored the multiPV ^ depth figure. Alternatively, you could
+# add the number of descendent nodes that have been trimmed to the figure storing the number of nodes
+# already calculated, and then divide that by the multiPV ^ depth figure.
+    # Also when in a node, but only a few of its child(ren) are considered (less than the multiPV value),
+    # once again this involves branches being trimmed.
+    
+# Once/if you create a GUI, you can display this ongoing estimate in the form of a continuously updated
+# progress bar (maybe updated every few seconds - shouldn't have much/any impact on the SF engine thinking?).
+# In the GUI you can also display a chess board showing the current position being calculated.
+    # For the GUI, try not to have a separate thread running for it while the SF enging is calculating in
+    # the Node search tree. Whenever a new Node is created, then call a function that updates the GUI
+    # with the progress bar stuff and the position being calculated. Since there should be no user input
+    # allowed in the GUI at this time, no thread should be needed. Only time input could possibly be allowed in
+    # the GUI is before SF calculates through the search tree (e.g., for getting preliminary parameter data
+    # from the user, but even here the command line may be better).
     
 
 
