@@ -31,6 +31,30 @@ class Stockfish:
             "Threads": 4,
             "Ponder": "false",
             "Hash": 3024,
+            # CONTINUE HERE:
+            # In the "running-tests-june-19" branch, the old value of 16 for the hash
+            # actually did better for the two positions in the
+            # test_make_moves_from_transposition_table_speed function. Then 1536 
+            # was second best, and 3024 was worst. 
+            # This was all for depth 28 with SF.
+            # Seems like the depth of SF, as well as the type of position, can have
+            # an effect on whether a bigger hash is useful.
+            
+            # E.g., when the test_make_moves_from_transposition_table_speed function
+            # was run with depth = 16 for SF (which is what's in the fork's test_models.py),
+            # the hash of 3024 (i.e., what this models.py file here is right now) often caused 
+            # the first time to be greater than the second time.
+            # Which means that resetting the TT for each consecutive position actually helped.
+            # No idea why this is.
+            
+            # Seems odd, since before that it looked like the 3024 value had helped.
+            
+            # Run some tests where the app has to do a normal search through the Node tree,
+            # such as with multiPV = 3, depth (through node tree) = 3, and SF depth = 28.
+            # See if hash = 16 or hash = 3024 finishes first.
+            
+            # Note that in chessbase I've reset the hash value to 1024 for now.
+            
             "MultiPV": 1,
             "Skill Level": 20,
             "Move Overhead": 10,
