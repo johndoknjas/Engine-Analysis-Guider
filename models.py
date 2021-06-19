@@ -35,7 +35,7 @@ class Stockfish:
             "Skill Level": 20,
             "Move Overhead": 10,
             "Minimum Thinking Time": 20,
-            "Slow Mover": 80,
+            "Slow Mover": 100,
             "UCI_Chess960": "false",
             "UCI_LimitStrength": "false",
             "UCI_Elo": 1350, # As long as UCI_LimitStrength is false, this value shouldn't matter.
