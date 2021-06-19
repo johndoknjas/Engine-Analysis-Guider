@@ -329,14 +329,9 @@ def output_tree(node):
             print("You did not enter P, Q, or a valid number, please try again:")
 
 def is_whites_turn(FEN):
-    for i in range(len(FEN)):
-        if i < len(FEN) - 2 and FEN[i] == ' ' and FEN[i+2] == ' ':
-            if FEN[i+1] == 'w':
-                return True
-            elif FEN[i+1] == 'b':
-                return False
-    raise ValueError("The FEN param for is_whites_turn does not say whose turn it is.")
-    
+    assert FEN.count(' w ') + FEN.count(' b ') == 1
+    return ' w ' in FEN
+
 def main():
     global stockfish13
     
