@@ -33,7 +33,7 @@ class Stockfish:
             "Hash": 3024,
             "MultiPV": 1,
             "Skill Level": 20,
-            "Move Overhead": 30,
+            "Move Overhead": 10,
             "Minimum Thinking Time": 20,
             "Slow Mover": 80,
             "UCI_Chess960": "false",
