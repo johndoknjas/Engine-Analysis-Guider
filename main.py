@@ -158,18 +158,14 @@ class Node:
         self.node_depth = node_depth
         self.node_move = node_move
         
-        stockfish13.set_fen_position(FEN, node_depth == 0)
+        stockfish13.set_fen_position(FEN, self.node_depth == 0)
         if self.node_move is not None:
             stockfish13.make_moves_from_current_position([self.node_move])
         parameters = stockfish13.get_parameters()
         self.FEN = stockfish13.get_fen_position()
-        self.PVs = stockfish13.get_top_moves(int(parameters["MultiPV"]))
+        self.is_leaf_node = (self.node_depth == self.search_depth)
+        self.PVs = stockfish13.get_top_moves(1 if self.is_leaf_node else int(parameters["MultiPV"]))
         self.check_PVs_sorted()
-        # CONTINUE HERE - An optimization could be to check if this is a leaf node
-        # (i.e., if node_depth == search_depth). If so, only get the first top move
-        # (or instead just call get_evaluation). The reason is that the search
-        # ends here due to this node being a leaf, so you don't need to waste time on multiple PVs.
-        # All you need is the direct evaluation from Stockfish at this point.
         
         # self.PVs is a list whose elements are dictionaries (see what's returned
         # from get_top_moves in models.py).
@@ -183,24 +179,14 @@ class Node:
             # There are no moves in this position, so set self.evaluation
             # to the evaluation stockfish directly gives in this position.
             # It will either be a mate or a stalemate.
-            evaluation_dict = stockfish13.get_evaluation() # CONTINUE HERE - modify
-            # get_evaluation() to temporarily set the multiPV value to 1. Or, just make sure
-            # multiPV is set to 1 by default, and when get_top_moves() is called, it gets set to some
-            # number n, but then reset to 1 (making it always = 1 when get_evaluation() is called).
-        
-            # Another (better?) option is just calling get_top_moves(1) instead of get_evaluation(),
-            # although you will have to modify
-            # the immediate behavior in the scope of this if statement (return value will be a list containing
-            # a single dictionary - I think then you will just use the Mate / Centipawn value of the move,
-            # which will be the top move in this position).
+            evaluation_dict = stockfish13.get_evaluation()
             assert(evaluation_dict["value"] == 0)
             if evaluation_dict["type"] == "mate":
                 self.evaluation = MIN_INTEGER if self.white_to_move else MAX_INTEGER
             else:
                 assert(evaluation_dict["type"] == "cp")
                 self.evaluation = 0
-        elif node_depth == search_depth:
-            # At a leaf node in the tree.
+        elif self.is_leaf_node:
             if self.PVs[0]["Centipawn"] is not None:
                 self.evaluation = self.PVs[0]["Centipawn"]
             elif (self.PVs[0]["Mate"] > 0):
@@ -209,17 +195,14 @@ class Node:
                 self.evaluation = MIN_INTEGER
         else:
             for current_PV in self.PVs:
-                # CONTINUE HERE:
-                # After going from each child back to parent in this loop, make sure to
-                # reset Stockfish's position with set_FEN_position(and with False param).
                 new_move = current_PV["Move"]
-                child_node = Node(self, self.FEN, search_depth, node_depth + 1, 
+                child_node = Node(self, self.FEN, self.search_depth, self.node_depth + 1, 
                                   new_move, not(self.white_to_move))
                 stockfish13.set_fen_position(self.FEN, False)                 
                 # Note that the self arg above will be the parent_node param
                 # for the child_node.
                 
-                # The False arg says to not sent the "ucinewgame" token to stockfish; the most important
+                # The False arg says to not send the "ucinewgame" token to stockfish; the most important
                 # effect of this is that it preserves the TT. This may help a little, even though it's going
                 # from child --> parent. You could try benchmarking tests experimenting with this
                 # arg being False and True, to see which is faster.
@@ -235,27 +218,13 @@ class Node:
                     (self.white_to_move and child_node.evaluation > self.evaluation) or
                     (not(self.white_to_move) and child_node.evaluation < self.evaluation)):
                         self.evaluation = child_node.evaluation
-    
-    # CONTINUE HERE - After writing make_move, the above code should be
-    # able to guide stockfish ahead. In main, the root node is now
-    # able to print an evaluation it gets after all the guiding.
-    # But in order to ensure that stockfish is being guided properly, and output
-    # of the variations (with the evaluations of the leaf nodes as annotations)
-    # will need to be provided.
-    # After doing some more testing with this, and perhaps writing a function to
-    # do the aforementioned printing of variations, continue by working on the
-    # CONTINUE HERE spots above for improving some details.
-    
+
     def compare_nodes(self, first, second):
         if first.evaluation is None or second.evaluation is None:
             raise ValueError("first.evaluation or second.evaluation has no value.")
         return (second.evaluation - first.evaluation) * (1 if self.white_to_move else -1)
     
     def check_PVs_sorted(self):
-        # CONTINUE HERE - Done rewriting this function, now test that
-        # the program works with the test position. After that, just optimization stuff
-        # which the comments describe. Also delete some obsolete comments that you've already
-        # implemented today.
         if len(self.PVs) <= 1:
             return
         for i in range(1, len(self.PVs)):
@@ -291,12 +260,7 @@ class Node:
                         assert ((first_var["Mate"] < 0 and second_var["Mate"] > 0) or
                                 second_var["Mate"] < first_var["Mate"])
 
-def output_tree(node):
-    # CONTINUE HERE - Nothing to do in this function for now. But after writing the make_move function,
-    # run the program and call this function to check the tree. So far it looks good, with the make_move
-    # simply flipping whose turn it is in the FEN (but not making any actual moves). The root node's
-    # evaluation is based off the top moves for both sides, which is good.
-    
+def output_tree(node):    
     print("node evaluation: " + str(node.evaluation))
     if node.children:
         print("Child nodes:")
@@ -346,35 +310,13 @@ def main():
     # (e.g., if you're the user), then it could default to the path you have here.
     
     root_node = Node(None, FEN, search_depth, 0, None, is_whites_turn(FEN))
-    # CONTINUE HERE - after all the calculations are done, output the data for
-    # the root node. Could also traverse the whole tree and generate notation
-    # that can be copied into chessbase (where the data for each position is
-    # ideally in the form of annotation).
     print(root_node.white_to_move)
     print(root_node.evaluation)
     
     user_input = input("To see the search tree, enter tree: ")
     if user_input == "tree":
         output_tree(root_node)
-    
-    """
-    print("Top 2 moves:\n")
-    print (stockfish13Mod.get_top_moves(2))
-    print("\n\nTop 3 moves:\n")
-    print (stockfish13Mod.get_top_moves(3))
-    print ("\n\n")
-    
-    
-    
-    print("Hi")
-    stockfish13.set_fen_position("rnbqkbnr/pppp1ppp/8/4p3/4PP2/8/PPPP2PP/RNBQKBNR b KQkq - 0 2")
-    stockfish13Mod.set_fen_position("rnbqkbnr/pppp1ppp/8/4p3/4PP2/8/PPPP2PP/RNBQKBNR b KQkq - 0 2")
-    print("Stockfish 13:")
-    print(stockfish13.get_evaluation())
-    print(stockfish13.get_best_move())
-    print("Stockfish 13 Mod:")
-    print(stockfish13Mod.get_evaluation())
-    print(stockfish13Mod.get_best_move()) # Outputs the second best move, as hoped.
-    """
+
 if __name__ == '__main__':
     main()
+
