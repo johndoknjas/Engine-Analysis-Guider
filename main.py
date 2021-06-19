@@ -71,6 +71,30 @@
     # en passant (or they have different en passant squares), then the DB / dictionary should not be used, as it's 
     # a unique position.
 
+# In the DB, store a position and the depth the engine calculated on it. Store the evaluation derived,
+# and also the top moves. If this position was calculated as leaf node though, there will be only
+# one top move. But still fine to just store that in the DB.
+    # On another run of the program, if the engine calculates this position again at the same depth, but a
+    # higher multiPV, then you can replace this entry (since the new entry will be more useful, as it will have
+    # more top moves).
+
+# If a node has only one legal move, then instead of getting SF to think on it to the specified depth (like depth
+# 28 or something), just make the move immediately. Then for the child node, you could make its search_depth the same as the
+# parent's (or not sure if this will mess anything up though). Or you could just increment the child node's depth
+# as normal, but the point is that SF doesn't have to think on a position where there's only one legal move. So
+# should save time. Although likely not extremely beneficial, since SF's TT would become stronger if it had
+# calculated in the parent node.
+    # If it's a leaf node with only one legal move, then it could be useful for SF to instead calculate
+    # in the position after making the move. Not sure if this will help the seldepth or not.
+    
+    # For checking if there's only one legal move, you'd have to do it in some cheap way. E.g., get stockfish
+    # to think at depth 2 or something, with multiPV = 2. If only one top move is returned by get_top_moves,
+    # then only one legal move. Just make sure doing this won't make the app more inefficient overall.
+    
+    # Could potentially extend this concept involving one legal move to positions where there's only one
+    # reasonable move (i.e., all other moves are very bad). But you'd likely need to go to let SF think to
+    # a sufficient depth to ensure this, which might be a little inefficient.
+
 # Could display an ongoing estimate of how much the program is completed, every 10 seconds or something
 # Calculate by seeing how many nodes have been evaluated in total, and how many still have to be
 # evaluated (multiPV ^ depth, which can be stored in some global variable). If you get to a node that has an 
