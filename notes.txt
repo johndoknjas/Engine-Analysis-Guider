@@ -84,9 +84,47 @@ one top move. But still fine to just store that in the DB.
 
 New TT notes - June 25:
 
--	In the TT / DB, you can save a position’s initial eval (as well as the top moves), but also save the 
-    eval derived after evaluating its child nodes. Since then if this position is encountered again via another 
-    move order in the search tree, you can just give it that derived eval.
+- Only store a Node's info in the DB after its derived evaluation from its child nodes is obtained. Then,
+  store this derived evaluation, as well as the Node's top moves (i.e., the moves of its child nodes). Note
+  that for a leaf node in a run of the application, the derived evaluation you store for it in the DB
+  will be its immediate evaluation, and no child nodes will be stored for it.
+  Also store the SF depth used, and how far ahead in the search tree the search went from that Node.
+  And store the FEN. And maybe store a boolean value representing if, in the search tree, some branches might
+  not get explored due to already meeting the goal evaluation (or having no decent chance of meeting it).
+  This could affect if you'd want to use an evaluation in the DB from a search like this.
+  Can also store the date and time for this DB entry, and don't have to overwrite any previous entry/entries.
+  
+- When using the DB to check if a position has been analyzed, see if there's a matching FEN (and in the
+  FEN ignore the info that doesn't matter, like ply count and fullmove). For the DB entry, ensure the SF
+  depth is at least the SF depth currently being used, and the number of layers still searched ahead from the
+  Node in the DB (in order to get the derived eval) is >= to the current Node. For the multiPV value,
+  it's fine if this is less in the DB if you're just getting an evaluation for a leaf node in the app.
+  However, if you're getting the top moves for a node, you'll obviously want the DB to have a >= multiPV to
+  what's used in the search, since you'll need at least those many top moves.
+      - If so, use the DB entry (and make sure you run through all qualified entry/entries and pick the best one).
+      - If the Node you're trying to evaluate in the current run of the app is a leaf node, then just get
+        the derived evaluation from the DB.
+      - If the Node is not a leaf node, then get the top moves from the DB, and continue normally from there
+        (including updating Stockfish's FEN with the make_moves function -- always do this, as SF should
+        be prepared to evaluate a position if needed, and it's not expensive to call the make_moves 
+        function from parent --> child or set_fen from child --> parent). 
+        The descendent nodes should then be evaluated in the same way with the DB 
+        (and if for some reason a descendent isn't in the DB, SF can evaluate normally -- this might happen
+        if the previous run used to generate the DB data had a different value for the goal, so maybe it
+        didn't search all the top_moves for a node).
+
+-	Should be no edge cases for low depth duplicate positions, since they can only start occurring at >= depth 3 
+    in the tree (earliest it can happen I think – first side moves, then the second side, then the first side).
+    
+    
+
+
+
+OBSOLETE TT ideas below, as I'll just be doing a DB immediately. Note that the ideas about storing a Node
+itself in a TT won't be used (can't really be applied to a DB). Storing the Node's important data in the DB
+will work fine. The thing about making a Node in a run of the search equal to a Node already evaluated won't
+be used - instead, the search will instead run until the leaf nodes, and then they can be given a derived eval
+already generated.
     
 -	For one of these duplicate positions, set the Node’s children to the same reference as the children of 
     the Node containing the position already evaluated.
@@ -97,9 +135,6 @@ New TT notes - June 25:
 	    allowing backwards traversal from the Nodes to their unique parents.
 	  - In order to set the Node’s child nodes equal to the other Node’s child nodes, the child nodes will 
 	    have to be stored in some way by the TT / DB.
-
--	Should be no edge cases for low depth duplicate positions, since they can only start occurring at >= depth 3 
-    in the tree (earliest it can happen I think – first side moves, then the second side, then the first side).
     
 -	Make a function that checks if a position is a duplicate, and then returns all the necessary info from the 
     TT / DB. In the function’s implementation, use a TT for now (TT will be a global var). But later on, can use a DB. 
